@@ -1,224 +1,203 @@
-# Delhi Civic Watch
+# 🏛️ Delhi Civic Watch
 
-Crowd-sourced civic issue reporting and tracking for Delhi's 70 assembly constituencies. Report garbage, potholes, sewage, broken lights, and more — then track resolutions publicly.
+> Report civic issues. Track resolutions. Hold your city accountable.
 
-**Live at** `http://localhost:8000`
+A crowd-sourced platform to report, track, and resolve civic issues across **Delhi's 70 assembly constituencies** and **250 MCD wards**. Inspired by Bengaluru's [NammaKasa](https://nammakasa.in).
 
----
-
-## Features (Implemented)
-
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Anonymous Reporting | ✅ Done | No name required — submit issues without personal info |
-| Photo Upload (up to 3) | ✅ Done | Camera capture on mobile, up to 3 photos per complaint |
-| Location Tagging | ✅ Done | GPS auto-detect + tap-on-map fallback when GPS denied (iOS fix) |
-| Red Circle Map | ✅ Done | Constituency-level active complaint counts as red circles (size = severity) |
-| 70 Constituencies | ✅ Done | Full Delhi assembly boundaries with MLA details (name, party, contact, email) |
-| Email MLA | ✅ Done | One-tap compose email to constituency MLA |
-| Pagination | ✅ Done | Browse issues with page controls, 20 per page |
-| Filters & Sort | ✅ Done | Filter by category, ward, status; sort by newest/oldest/most upvoted |
-| List View | ✅ Done | Tabular browsing of all reported issues |
-| Community Upvotes | ✅ Done | Citizens confirm issues with 👍; 3+ upvotes = "Verified" badge |
-| Before/After Photos | ✅ Done | Resolution photo upload creates before→after comparison |
-| Watch Subscription | ✅ Done | Telegram bot + Email alerts — tap to subscribe, instant notifications |
-| Ward-Level Filtering | ✅ Done | 250 real MCD wards (post-2022 delimitation), filtered by constituency |
-| Constituency Leaderboard | ✅ Done | Ranked by resolution rate — which MLAs deliver? |
-| Weekly Digest | ✅ Done | Auto-generated summary: new vs resolved per constituency this week |
-| Resolution Tracking | ✅ Done | Mark as resolved with **required** proof photo + response time tracking |
-| Upvote Dedup | ✅ Done | One upvote per browser (localStorage) — no double-voting |
-| Mobile Responsive | ✅ Done | Works on phone browsers, camera integration, touch-friendly UI |
-| 12 Issue Categories | ✅ Done | Garbage, Sewage, Potholes, Roads, Lights, Water, Manholes, Construction, Toilets, Animals, Air, Noise |
+**Live demo:** `https://delhi-civic-watch.fly.dev`  
+**Source:** `https://github.com/rishxbhhhh/DelhiCivicWatch`  
+**Tech:** FastAPI · SQLite · Leaflet.js · Fly.io · Telegram Bot
 
 ---
 
-## Quick Start
+## ✨ Features
 
-```bash
-cd delhi-issues-map
-pip install -r requirements.txt
+| Feature | Details |
+|---------|---------|
+| **Anonymous Reporting** | No name, no email, no login — submit issues instantly |
+| **Photo Upload** | Up to 3 photos per report, captured directly from phone camera |
+| **Location Tagging** | GPS auto-detect + tap-on-map fallback for iOS |
+| **Image Compression** | Auto-resize to 1200px max → ~150KB per photo (saves 95% space) |
+| **Interactive Map** | 70 constituencies with red circle markers sized by active complaints |
+| **250 Real MCD Wards** | Post-2022 delimitation — wards filter by constituency |
+| **Community Upvotes** | 👍 confirm an issue; 3+ upvotes = "Verified" badge |
+| **Before/After Photos** | Resolution proof photo required — creates before→after comparison |
+| **Constituency Leaderboard** | Ranked by resolution rate — which MLAs deliver? |
+| **Weekly Digest** | Auto-summary of new vs resolved issues per constituency |
+| **Telegram Alerts** | 🔔 Watch button → start the bot → instant notifications |
+| **Email MCD Button** | 📧 On every complaint — auto-populates MCD zone + MLA in CC |
+| **Storage Health Monitor** | Auto-pauses submissions at 90% disk with user-facing banner |
+| **Resolution Tracking** | Mark resolved with proof photo + response time tracking |
+| **12 Issue Categories** | Garbage, Sewage, Potholes, Street Lights, Water Logging, and more |
+| **Mobile Responsive** | Works on phone browsers, touch-friendly, camera-ready |
+| **Pagination & Filters** | Browse 20/page, filter by ward/category/status/sort |
 
-# First time or if port is free:
+---
+
+## 🚀 Quick Start
+
+```powershell
+cd C:\Users\rishabh\Desktop\delhi-issues-map
 python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
-
-# If port 8000 is still occupied from a previous run:
-taskkill //F //IM python.exe 2>nul & python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
-
-# Open http://localhost:8000
 ```
 
-For phone access on same WiFi: use your PC's local IP (e.g., `http://192.168.x.x:8000`)
+Open `http://localhost:8000`
+
+**If port 8000 is taken:**
+```powershell
+for /f "tokens=5" %a in ('netstat -ano ^| findstr ":8000.*LISTENING"') do taskkill //PID %a //F
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
 
 ---
 
-## Free Deployment ($0/month — Fly.io)
+## ☁️ Deploy to Fly.io (Free — $0/month)
 
-Best option for a civic project: Fly.io free tier never expires.
+The app runs on Fly.io's free tier — **3 VMs, 256MB RAM, 3GB persistent volume.**
 
-| Resource | Free tier | Enough for |
-|----------|-----------|------------|
-| App hosting | 3 VMs, 256MB RAM | ~1,000 concurrent users |
-| Storage | 3GB persistent volume | ~10,000 photos + DB |
-| HTTPS | Auto-provisioned | Yes |
-| Domain | `yourapp.fly.dev` | Free, looks professional |
-| Cost | **$0/month forever** | No credit card tricks |
+### One-time setup
 
-**Deploy in 3 commands:**
+```powershell
+# Install Fly CLI
+iwr https://fly.io/install.ps1 -useb | iex
 
-```bash
-# 1. Install Fly CLI
-curl -L https://fly.io/install.sh | sh
-
-# 2. Launch (creates app + provisions VM)
+# Launch app
+cd C:\Users\rishabh\Desktop\delhi-issues-map
 fly launch
+# → App name: delhi-civic-watch
+# → Region: bom (Mumbai)
+# → Database: no
+# → Deploy: no (do volume first)
 
-# 3. Create persistent volume for DB and uploads
+# Create persistent volume (DB + photos survive redeploys)
 fly volumes create dcw_data --region bom --size 1
+
+# Deploy
 fly deploy
 ```
 
-Your app is live at `https://delhi-civic-watch.fly.dev` (or rename in fly.toml).
-
-**Set up notifications (Telegram + Email):**
-
-### Telegram (instant, free, unlimited)
-1. Open Telegram → `@BotFather` → `/newbot` → name: `Delhi Civic Watch` → username: `@DelhiCivicWatchBot`
-2. Copy the token:
-   ```powershell
-   fly secrets set TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234gh
-   ```
-3. Register the webhook:
-   ```powershell
-   curl https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://delhi-civic-watch.fly.dev/api/telegram/webhook
-   ```
-
-### Email (Brevo — 300 free emails/day)
-1. Sign up at [brevo.com](https://brevo.com) → get API key from SMTP & API → API Keys
-2. Verify a sender email in Brevo (e.g. `alerts@delhicivicwatch.in`)
-3. Set the secrets:
-   ```powershell
-   fly secrets set BREVO_API_KEY=xkeysib-...  NOTIFICATION_EMAIL=alerts@delhicivicwatch.in
-   ```
-4. Redeploy: `fly deploy`
-
-Test both: tap "🔔 Watch" on any constituency → pick Telegram or Email → submit an issue in that area → you'll get notified.
-
-**Troubleshooting:**
-
-| Issue | Fix |
-|-------|-----|
-| Port 8000 occupied | `for /f "tokens=5" %a in ('netstat -ano ^| findstr ":8000.*LISTENING"') do taskkill //PID %a //F` |
-| Bot not responding to `/start` | `fly deploy` then `curl https://api.telegram.org/bot<TOKEN>/getWebhookInfo` — check for `last_error_message` |
-| Webhook not registered | `curl https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://delhi-civic-watch.fly.dev/api/telegram/webhook` |
-| Check webhook status | `curl https://api.telegram.org/bot<TOKEN>/getWebhookInfo` |
-| Delete & re-register webhook | `curl https://api.telegram.org/bot<TOKEN>/deleteWebhook` then `curl https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://delhi-civic-watch.fly.dev/api/telegram/webhook` |
-| Storage full banner | `fly ssh console` → `df -h` → `fly volumes extend dcw_data --size 2` to increase volume |
-| DB schema changed | Delete old DB on volume: `fly ssh console` → `rm /app/storage/issues.db` → `fly deploy` (auto-recreates) |
-| Check app health | `curl https://delhi-civic-watch.fly.dev/api/health` |
-| View logs | `fly logs` |
-
-**Free custom domain:** If you want a real domain instead of `.fly.dev`, `.xyz` domains are ~$1/year on Namecheap. Cloudflare offers free DNS + SSL. Or use `freedns.afraid.org` for a free subdomain like `delhiwatch.mooo.com`.
+Your app → `https://delhi-civic-watch.fly.dev`
 
 ---
 
-## Paid Deployment (Railway — $15–22/month)
+## 🤖 Telegram Bot Setup
 
-```bash
-# Local dev with prod-like stack (PostgreSQL + nginx):
-docker compose up -d
+```powershell
+# 1. Create bot: @BotFather → /newbot → DelhiCivicWatchBot
+# 2. Set token on Fly:
+fly secrets set TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
 
-# Open http://localhost
+# 3. Register webhook:
+curl https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://delhi-civic-watch.fly.dev/api/telegram/webhook
 ```
 
-**Railway (free tier → $18–25/month):**
-
-1. Install Railway CLI: `npm i -g @railway/cli`
-2. `railway login`
-3. `railway init`
-4. `railway up` (deploys from Dockerfile)
-5. Add PostgreSQL: `railway add` → choose PostgreSQL
-6. Railway auto-injects `DATABASE_URL` — no config needed
-7. `railway domain` → get your public URL
-
-**Railway cost breakdown (1,000-user scale):**
-
-| Resource | Spec | Monthly cost |
-|----------|------|-------------|
-| App container | 512MB RAM, 1 vCPU (shared) | ~$12–18 |
-| PostgreSQL | Smallest (1GB storage, 0.5 vCPU) | ~$2–3 |
-| Network egress | ~5GB/month (photos + traffic) | ~$0.50 |
-| **Total** | | **~$15–22/month** |
-
-Railway gives $5 free credit on signup. First month: ~$10–17 out of pocket.
+**Bot commands:** `/start`, `/watch Karol Bagh`, `/status`, `/unwatch`
 
 ---
 
-## API Reference
+## 📧 Email Notifications (Brew/ free tier)
+
+Telegram is live. Email uses Brevo (300/day free). Re-enable by:
+
+1. Uncomment email form in `frontend/index.html` (lines ~218-228)
+2. Uncomment JS handler in `frontend/script.js` (lines ~371-381)
+3. Set secrets:
+```powershell
+fly secrets set BREVO_API_KEY=xkeysib-...  NOTIFICATION_EMAIL=you@email.com
+fly deploy
+```
+
+---
+
+## 📋 API Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/health` | Storage health check (disk %, DB size, accepting_reports flag) |
-| GET | `/api/stats` | Total/active/resolved/upvotes counts |
-| GET | `/api/constituencies` | All 70 constituencies + MLA details + counts + avg resolution time |
+| GET | `/api/health` | Storage health, disk %, accepting_reports flag |
+| GET | `/api/stats` | Total/active/resolved/upvote counts |
+| GET | `/api/constituencies` | 70 constituencies + MLA + avg resolution time |
 | GET | `/api/constituencies/leaderboard` | Ranked by resolution rate |
-| GET | `/api/map-data` | Full GeoJSON boundary data |
-| GET | `/api/issues?offset=&limit=&category=&ward=&status=&sort=` | Paginated issue list |
-| POST | `/api/issues` | Submit issue (multipart: photos, location, anonymous OK) |
-| POST | `/api/issues/{id}/upvote` | Community confirmation upvote |
-| POST | `/api/issues/{id}/resolve` | Mark resolved (**resolution photo required**) |
-| GET | `/api/categories` | List of 12 issue categories |
-| GET | `/api/wards?constituency_id=` | 250 MCD wards (optionally filtered by constituency) |
-| POST | `/api/subscribe` | Subscribe to constituency alerts |
-| GET | `/api/unsubscribe?token=` | Unsubscribe from alerts |
+| GET | `/api/map-data` | GeoJSON boundary data (70 constituencies, 4.7MB) |
+| GET | `/api/issues?offset=&limit=&category=&ward=&status=&sort=` | Paginated issues |
+| POST | `/api/issues` | Submit issue (multipart: photos, location, anonymous) |
+| POST | `/api/issues/{id}/upvote` | Community upvote |
+| POST | `/api/issues/{id}/resolve` | Mark resolved (resolution photo **required**) |
+| GET | `/api/categories` | 12 issue categories |
+| GET | `/api/wards?constituency_id=` | 250 MCD wards (filtered by constituency) |
+| GET | `/api/mcd-email?constituency_id=` | MCD zone + MLA email for "Email Authority" |
+| POST | `/api/subscribe` | Subscribe (Telegram chat_id or email) |
+| POST | `/api/telegram/webhook` | Telegram bot webhook |
 | GET | `/api/digest` | Weekly activity summary |
-| GET | `/uploads/{filename}` | Serve uploaded images |
+| POST | `/api/unsubscribe` | Unsubscribe by token |
 
 ---
 
-## Tech Stack
-
-- **Backend**: FastAPI, SQLAlchemy, SQLite
-- **Frontend**: Leaflet.js, Vanilla JavaScript, CSS3
-- **Data**: 70-constituency GeoJSON with MLA details
-
----
-
-## Future Roadmap
-
-### Phase 2: Accountability & Virality
-| # | Feature | Impact |
-|---|---------|--------|
-| 4 | Auto-escalation chain: 7d → re-email MLA, 14d → email MP, 21d → RTI draft | Creates real pressure |
-| 5 | One-tap Share on Twitter/X (tags MLA + municipal handle with photo) | Public tagging = faster response |
-| 6 | PWA install (offline draft + home screen icon) | Works during connectivity gaps |
-| 7 | Browser push notifications for watched constituencies | Instant alerts without email |
-| 8 | Auto-categorization from uploaded photos (on-device ML) | Less friction in reporting |
-
-### Phase 3: Data & Trust
-| # | Feature | Impact |
-|---|---------|--------|
-| 10 | Annual report card PDF per constituency (auto-generated) | Media-ready accountability |
-| 11 | Issue dispute system (community can flag false "resolved" claims) | Prevents gaming |
-| 12 | Heatmap view (density instead of circles) | Better spatial understanding |
-| 13 | CSV/JSON export for researchers & journalists | Open data |
-| 14 | Admin dashboard with moderation queue | Anti-spam at scale |
-
----
-
-## Project Structure
+## 🗺️ Project Structure
 
 ```
 delhi-issues-map/
 ├── backend/
-│   ├── main.py           # FastAPI server (15 endpoints)
-│   ├── models.py         # SQLAlchemy: Issue + WatchSubscription + 250 MCD_WARDS
-│   └── schemas.py        # Pydantic: 10 response/request schemas
+│   ├── main.py           # FastAPI server — 15+ endpoints
+│   ├── models.py         # SQLAlchemy: Issue, WatchSubscription, 250 MCD_WARDS
+│   └── schemas.py        # Pydantic: 10+ request/response schemas
 ├── frontend/
 │   ├── index.html        # Multi-view SPA (map/list/leaderboard/digest)
 │   ├── style.css         # Dark header, stats bar, responsive
-│   └── script.js         # Map, pagination, upvotes, before/after, subscriptions
+│   └── script.js         # Map, pagination, upvotes, Telegram, MCD email
 ├── data/
 │   └── delhi_constituencies.geojson  # 70 constituencies, 4.7MB
-├── uploads/              # User-submitted photos
+├── uploads/              # User-submitted photos (on Fly volume in prod)
+├── Dockerfile            # Multi-stage build
+├── fly.toml              # Fly.io config (Mumbai, 256MB, 1GB volume)
+├── docker-compose.yml    # Local PostgreSQL + nginx stack
+├── nginx.conf            # Rate limiting, gzip, 20MB upload cap
+├── railway.json          # Railway deployment config
+├── MARKETING.md          # SEO, Reddit, X, WhatsApp growth playbook
 └── requirements.txt
 ```
+
+---
+
+## 🛠️ Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| Port 8000 occupied | `for /f "tokens=5" %a in ('netstat -ano ^| findstr ":8000.*LISTENING"') do taskkill //PID %a //F` |
+| Bot not responding | `fly deploy` then `curl https://api.telegram.org/bot<TOKEN>/getWebhookInfo` — check `last_error_message` |
+| Register webhook | `curl https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://delhi-civic-watch.fly.dev/api/telegram/webhook` |
+| Check webhook status | `curl https://api.telegram.org/bot<TOKEN>/getWebhookInfo` |
+| Delete & re-register | `curl https://api.telegram.org/bot<TOKEN>/deleteWebhook` then `setWebhook` again |
+| Storage full | `fly ssh console` → `df -h` → `fly volumes extend dcw_data --size 2` |
+| DB schema changed | `fly ssh console` → `rm /app/storage/issues.db` → `fly deploy` |
+| Check app health | `curl https://delhi-civic-watch.fly.dev/api/health` |
+| View logs | `fly logs` |
+| Reset dev DB | `del issues.db` while server is stopped |
+
+---
+
+## 📈 Technology
+
+| Layer | Choice | Why |
+|-------|--------|-----|
+| Backend | FastAPI 3.11 | Async, auto-OpenAPI, fastest Python framework |
+| Database | SQLite / PostgreSQL | SQLite for free tier; PG for scale |
+| Frontend | Leaflet.js + Vanilla JS | No framework overhead, mobile-friendly |
+| Map data | GeoJSON (70 polygons, 4.7MB) | Official Delhi delimitation data |
+| Hosting | Fly.io free tier | $0 forever, Mumbai region, auto-HTTPS |
+| Images | Compressed JPEG, 1200px max | Pillow resize + quality=75, ~150KB/photo |
+| Notifications | Telegram Bot API | Instant, free, unlimited |
+| CI/CD | Fly.io + Git push | `git push` → auto-deploy |
+
+---
+
+## 🧠 Lessons Learned
+
+- **Volume mounts overwrite directories.** GeoJSON was in `data/`. Volume at `/app/data` hid it. Solution: separate paths (`/app/storage` for DB/uploads, `data/` stays in source).
+- **SQLite handles 1K users fine.** Single-writer, reads are fast. Civic complaints aren't high-write-volume.
+- **iPhone geolocation requires HTTPS.** iOS blocks GPS without TLS. Fallback: pick-on-map.
+
+---
+
+## 📜 License
+
+Built by Rishabh Rajpurohit. Inspired by NammaKasa, Bangalore. Open source under MIT.
