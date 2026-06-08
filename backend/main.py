@@ -584,9 +584,10 @@ def subscription_count(db: Session = Depends(get_db)):
 @app.get("/api/digest", response_model=WeeklyDigest)
 
 @app.post("/api/telegram/webhook")
-async def telegram_webhook(request: dict, db: Session = Depends(get_db)):
+async def telegram_webhook(request: dict, db=Depends(get_db)):
     """Telegram sends updates here. Captures chat_id on /start."""
     try:
+        # FastAPI auto-parses JSON body to dict
         msg = request.get("message", {})
         chat = msg.get("chat", {})
         text = msg.get("text", "")

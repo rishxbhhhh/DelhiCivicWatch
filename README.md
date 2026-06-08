@@ -103,6 +103,18 @@ Your app is live at `https://delhi-civic-watch.fly.dev` (or rename in fly.toml).
 
 Test both: tap "🔔 Watch" on any constituency → pick Telegram or Email → submit an issue in that area → you'll get notified.
 
+**Troubleshooting:**
+
+| Issue | Fix |
+|-------|-----|
+| Port 8000 occupied | `for /f "tokens=5" %a in ('netstat -ano ^| findstr ":8000.*LISTENING"') do taskkill //PID %a //F` |
+| Bot not responding to `/start` | `fly deploy` then `curl https://api.telegram.org/bot<TOKEN>/getWebhookInfo` — check for `last_error_message` |
+| Webhook not registered | `curl https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://delhi-civic-watch.fly.dev/api/telegram/webhook` |
+| Storage full banner | `fly ssh console` → `df -h` → `fly volumes extend dcw_data --size 2` to increase volume |
+| DB schema changed | Delete old DB on volume: `fly ssh console` → `rm /app/storage/issues.db` → `fly deploy` (auto-recreates) |
+| Check app health | `curl https://delhi-civic-watch.fly.dev/api/health` |
+| View logs | `fly logs` |
+
 **Free custom domain:** If you want a real domain instead of `.fly.dev`, `.xyz` domains are ~$1/year on Namecheap. Cloudflare offers free DNS + SSL. Or use `freedns.afraid.org` for a free subdomain like `delhiwatch.mooo.com`.
 
 ---
