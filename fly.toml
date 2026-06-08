@@ -12,6 +12,8 @@ primary_region = 'bom'
 [env]
   DATABASE_URL = "sqlite:////app/storage/issues.db"
   DATA_DIR = "/app/storage"
+  TELEGRAM_BOT_TOKEN = ""     # Set this after creating bot with @BotFather
+  APP_URL = "https://delhi-civic-watch.fly.dev"
 
 [[mounts]]
   source = 'dcw_data'

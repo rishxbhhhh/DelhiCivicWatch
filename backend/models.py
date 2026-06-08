@@ -46,12 +46,13 @@ class WatchSubscription(Base):
     __tablename__ = "subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, nullable=False, index=True)
+    chat_id = Column(String, nullable=True, index=True)     # Telegram chat ID
+    email = Column(String, nullable=True, index=True)        # Legacy email
     constituency_id = Column(String, nullable=True)
     ward = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     verified = Column(Boolean, default=False)
-    unsubscribe_token = Column(String, nullable=False, unique=True)
+    unsubscribe_token = Column(String, nullable=True, unique=True)
 
 
 # ═══════════════════════════════════════════════

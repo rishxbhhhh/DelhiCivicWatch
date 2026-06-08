@@ -134,6 +134,58 @@ def check_storage() -> dict:
 
 STORAGE_THRESHOLD = 90  # Block submissions when disk is 90% full
 
+# Telegram Bot Config
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}" if TELEGRAM_BOT_TOKEN else ""
+APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+
+
+def send_telegram(chat_id: str, text: str) -> bool:
+    """Send a message to a Telegram chat. Returns True if sent."""
+    if not TELEGRAM_BOT_TOKEN:
+        return False
+    try:
+        import urllib.request, urllib.parse
+        data = urllib.parse.urlencode({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+        req = urllib.request.Request(f"{TELEGRAM_API}/sendMessage", data=data)
+        urllib.request.urlopen(req, timeout=5)
+        return True
+    except Exception:
+        return False
+
+
+def notify_subscribers(constituency_id: str, constituency_name: str, issue_summary: str, category: str, is_new: bool = True):
+    """Notify Telegram subscribers when an issue is created or resolved."""
+    db = SessionLocal()
+    try:
+        subs = db.query(WatchSubscription).filter(
+            WatchSubscription.chat_id.isnot(None),
+            (WatchSubscription.constituency_id == constituency_id) |
+            (WatchSubscription.constituency_id.is_(None))  # all-area watchers
+        ).all()
+
+        if not subs:
+            return
+
+        if is_new:
+            text = (
+                f"🆕 <b>New Issue in {constituency_name}</b>\n"
+                f"📂 {category}\n"
+                f"📝 {issue_summary[:200]}\n\n"
+                f"<a href=\"{APP_URL}\">View on Delhi Civic Watch</a>"
+            )
+        else:
+            text = (
+                f"✅ <b>Issue Resolved in {constituency_name}</b>\n"
+                f"📝 {issue_summary[:200]}\n\n"
+                f"<a href=\"{APP_URL}\">View on Delhi Civic Watch</a>"
+            )
+
+        for sub in subs:
+            send_telegram(sub.chat_id, text)
+    finally:
+        db.close()
+
 
 # ═══════════════════════════════════════════════
 # HEALTH
@@ -341,6 +393,16 @@ async def create_issue(
     db.add(db_issue)
     db.commit()
     db.refresh(db_issue)
+
+    # Notify Telegram subscribers
+    geojson = load_geojson()
+    const_name = constituency_id
+    for f in geojson.get("features", []):
+        if str(f["properties"]["id"]) == str(constituency_id):
+            const_name = f["properties"]["name"]
+            break
+    notify_subscribers(constituency_id, const_name, issue_summary, issue_category or "General", is_new=True)
+
     return db_issue
 
 
@@ -384,6 +446,16 @@ async def resolve_issue(
     issue.resolved = True
     issue.resolved_at = datetime.utcnow()
     db.commit()
+
+    # Notify Telegram subscribers
+    geojson = load_geojson()
+    const_name = issue.constituency_id
+    for f in geojson.get("features", []):
+        if str(f["properties"]["id"]) == str(issue.constituency_id):
+            const_name = f["properties"]["name"]
+            break
+    notify_subscribers(issue.constituency_id, const_name, issue.issue_summary, issue.issue_category or "General", is_new=False)
+
     return {
         "status": "resolved",
         "resolution_photo": issue.resolution_photo,
@@ -396,23 +468,46 @@ async def resolve_issue(
 # ═══════════════════════════════════════════════
 @app.post("/api/subscribe", response_model=SubscribeResponse)
 def subscribe(body: SubscribeRequest, db: Session = Depends(get_db)):
-    existing = db.query(WatchSubscription).filter(
-        WatchSubscription.email == body.email,
-        WatchSubscription.constituency_id == body.constituency_id,
-    ).first()
-    if existing:
-        return SubscribeResponse(message="Already subscribed to this area!")
+    # Telegram subscription
+    if body.chat_id:
+        existing = db.query(WatchSubscription).filter(
+            WatchSubscription.chat_id == body.chat_id,
+            WatchSubscription.constituency_id == body.constituency_id,
+        ).first()
+        if existing:
+            return SubscribeResponse(message="Already watching this area on Telegram!")
+        sub = WatchSubscription(
+            chat_id=body.chat_id,
+            constituency_id=body.constituency_id,
+            ward=body.ward,
+            verified=True,
+        )
+        db.add(sub)
+        db.commit()
+        const_name = body.constituency_id or "all of Delhi"
+        send_telegram(body.chat_id, f"🔔 You're now watching <b>{const_name}</b>! You'll get alerts for new and resolved issues here.")
+        return SubscribeResponse(message="Subscribed on Telegram!")
 
-    token = secrets.token_urlsafe(16)
-    sub = WatchSubscription(
-        email=body.email,
-        constituency_id=body.constituency_id,
-        ward=body.ward,
-        unsubscribe_token=token,
-    )
-    db.add(sub)
-    db.commit()
-    return SubscribeResponse(message=f"Subscribed! You'll get alerts for new issues. Unsubscribe token: {token}")
+    # Legacy email subscription
+    if body.email:
+        existing = db.query(WatchSubscription).filter(
+            WatchSubscription.email == body.email,
+            WatchSubscription.constituency_id == body.constituency_id,
+        ).first()
+        if existing:
+            return SubscribeResponse(message="Already subscribed to this area!")
+        token = secrets.token_urlsafe(16)
+        sub = WatchSubscription(
+            email=body.email,
+            constituency_id=body.constituency_id,
+            ward=body.ward,
+            unsubscribe_token=token,
+        )
+        db.add(sub)
+        db.commit()
+        return SubscribeResponse(message=f"Subscribed! Unsubscribe token: {token}")
+
+    raise HTTPException(status_code=400, detail="Provide chat_id (Telegram) or email")
 
 
 @app.get("/api/unsubscribe")
@@ -433,6 +528,67 @@ def subscription_count(db: Session = Depends(get_db)):
 
 
 @app.get("/api/digest", response_model=WeeklyDigest)
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(request: dict, db: Session = Depends(get_db)):
+    """Telegram sends updates here. Captures chat_id on /start."""
+    try:
+        msg = request.get("message", {})
+        chat = msg.get("chat", {})
+        text = msg.get("text", "")
+        chat_id = str(chat.get("id", ""))
+
+        if not chat_id:
+            return {"ok": True}
+
+        if text.startswith("/start"):
+            # Check if already subscribed
+            existing = db.query(WatchSubscription).filter(
+                WatchSubscription.chat_id == chat_id
+            ).first()
+            if existing:
+                send_telegram(chat_id, "👋 You're already subscribed to Delhi Civic Watch alerts!\n\nUse /watch <constituency> to change area, or /unwatch to stop.")
+            else:
+                # Subscribe to all Delhi by default
+                sub = WatchSubscription(chat_id=chat_id, verified=True)
+                db.add(sub)
+                db.commit()
+                send_telegram(chat_id,
+                    "🏛️ <b>Welcome to Delhi Civic Watch!</b>\n\n"
+                    "You'll get alerts for new and resolved civic issues across Delhi.\n\n"
+                    "Commands:\n"
+                    "/watch Narela — watch a specific constituency\n"
+                    "/unwatch — stop all alerts\n"
+                    "/status — see your subscriptions"
+                )
+        elif text.startswith("/unwatch"):
+            db.query(WatchSubscription).filter(WatchSubscription.chat_id == chat_id).delete()
+            db.commit()
+            send_telegram(chat_id, "👋 You've been unsubscribed. Thank you for participating!")
+        elif text.startswith("/status"):
+            subs = db.query(WatchSubscription).filter(WatchSubscription.chat_id == chat_id).all()
+            if not subs:
+                send_telegram(chat_id, "You're not watching any areas. Send /start to subscribe.")
+            else:
+                areas = [s.constituency_id or "All Delhi" for s in subs]
+                send_telegram(chat_id, f"🔔 Watching: {', '.join(areas)}")
+        elif text.startswith("/watch"):
+            parts = text.split(" ", 1)
+            if len(parts) > 1:
+                area = parts[1].strip()
+                # Remove old all-Delhi subs, add specific
+                db.query(WatchSubscription).filter(WatchSubscription.chat_id == chat_id, WatchSubscription.constituency_id.is_(None)).delete()
+                existing = db.query(WatchSubscription).filter(WatchSubscription.chat_id == chat_id, WatchSubscription.constituency_id == area).first()
+                if not existing:
+                    sub = WatchSubscription(chat_id=chat_id, constituency_id=area, verified=True)
+                    db.add(sub)
+                db.commit()
+                send_telegram(chat_id, f"🔔 Now watching <b>{area}</b>! You'll get alerts for issues here.")
+            else:
+                send_telegram(chat_id, "Usage: /watch ConstituencyName\nExample: /watch Karol Bagh")
+    except Exception:
+        pass
+    return {"ok": True}
 def get_weekly_digest(db: Session = Depends(get_db)):
     week_ago = datetime.utcnow() - timedelta(days=7)
     new_issues = db.query(Issue).filter(Issue.created_at >= week_ago).all()

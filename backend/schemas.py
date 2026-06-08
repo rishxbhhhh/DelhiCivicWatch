@@ -72,7 +72,8 @@ class IssueStats(BaseModel):
 
 
 class SubscribeRequest(BaseModel):
-    email: str
+    chat_id: Optional[str] = None
+    email: Optional[str] = None
     constituency_id: Optional[str] = None
     ward: Optional[str] = None
 

@@ -365,20 +365,9 @@ async function handleResolveSubmit(e) {
 function openSubscribeModal(c) {
     document.getElementById('subscribe-modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    document.getElementById('subscribe-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('subscribe-email').value.trim();
-        if (!email) return;
-        try {
-            const res = await fetch(`${API}/api/subscribe`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, constituency_id: c.id }),
-            });
-            const data = await res.json();
-            closeSubscribeModal();
-            showToast('🔔 ' + data.message);
-        } catch { showToast('Subscription failed'); }
-    };
+    // Update bot link with constituency context if available
+    const botLink = document.getElementById('telegram-bot-link');
+    botLink.href = 'https://t.me/DelhiCivicWatchBot';
 }
 
 function closeSubscribeModal() {

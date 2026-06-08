@@ -21,7 +21,7 @@ Crowd-sourced civic issue reporting and tracking for Delhi's 70 assembly constit
 | List View | ✅ Done | Tabular browsing of all reported issues |
 | Community Upvotes | ✅ Done | Citizens confirm issues with 👍; 3+ upvotes = "Verified" badge |
 | Before/After Photos | ✅ Done | Resolution photo upload creates before→after comparison |
-| Watch Subscription | ✅ Done | Subscribe to constituency alerts (email) for new/resolved issues |
+| Watch Subscription | ✅ Done | Telegram bot alerts — tap to subscribe, get instant notifications |
 | Ward-Level Filtering | ✅ Done | 250 real MCD wards (post-2022 delimitation), filtered by constituency |
 | Constituency Leaderboard | ✅ Done | Ranked by resolution rate — which MLAs deliver? |
 | Weekly Digest | ✅ Done | Auto-generated summary: new vs resolved per constituency this week |
@@ -78,6 +78,21 @@ fly deploy
 ```
 
 Your app is live at `https://delhi-civic-watch.fly.dev` (or rename in fly.toml).
+
+**Set up Telegram notifications:**
+
+1. Open Telegram → search `@BotFather` → send `/newbot`
+2. Name: `Delhi Civic Watch` → username: `DelhiCivicWatchBot`
+3. Copy the token → set it in Fly:
+   ```powershell
+   fly secrets set TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234gh
+   fly deploy
+   ```
+4. Set the webhook:
+   ```powershell
+   curl https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook?url=https://delhi-civic-watch.fly.dev/api/telegram/webhook
+   ```
+5. Users tap "🔔 Watch" → open Telegram → press Start → they're subscribed!
 
 **Free custom domain:** If you want a real domain instead of `.fly.dev`, `.xyz` domains are ~$1/year on Namecheap. Cloudflare offers free DNS + SSL. Or use `freedns.afraid.org` for a free subdomain like `delhiwatch.mooo.com`.
 
