@@ -187,6 +187,7 @@ main { height: calc(100vh - 190px); position: relative; }
 .list-issue .list-actions .resolve-btn { border-color: var(--green); color: var(--green); }
 .list-issue .list-actions .upvote-btn { border-color: var(--orange); color: var(--orange); display: flex; align-items: center; gap: 3px; }
 .list-issue .list-actions .upvote-btn.upvoted { background: var(--orange-light); }
+.list-issue .list-actions .email-mcd-btn { border-color: var(--blue); color: var(--blue); }
 .list-issue .list-images { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
 .list-issue .list-images img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; cursor: pointer; }
 .list-issue .list-images img.resolution-img { border: 2px solid var(--green); }

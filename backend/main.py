@@ -17,6 +17,7 @@ from PIL import Image
 
 from backend.models import SessionLocal, Issue, WatchSubscription, MCD_WARDS, CONSTITUENCY_WARDS
 from backend.models import DATABASE_URL
+from backend.models import MCD_ZONE_EMAILS, CONSTITUENCY_MCD_ZONE
 from backend.schemas import (
     IssueCreate, IssueResponse, IssueListResponse,
     ConstituencyInfo, IssueStats, SubscribeRequest, SubscribeResponse,
@@ -701,6 +702,31 @@ def get_wards(constituency_id: Optional[str] = None):
 @app.get("/api/categories")
 def get_categories():
     return CATEGORIES
+
+
+@app.get("/api/mcd-email")
+def get_mcd_email(constituency_id: str):
+    """Return MCD zone email and MLA email for a constituency."""
+    zone = CONSTITUENCY_MCD_ZONE.get(str(constituency_id))
+    mcd_email = MCD_ZONE_EMAILS.get(zone) if zone else None
+
+    # Find MLA email from GeoJSON
+    mla_email = None
+    mla_name = None
+    geojson = load_geojson()
+    for f in geojson.get("features", []):
+        if str(f["properties"]["id"]) == str(constituency_id):
+            mla_email = f["properties"].get("email")
+            mla_name = f["properties"].get("mla")
+            break
+
+    return {
+        "constituency_id": constituency_id,
+        "mcd_zone": zone,
+        "mcd_email": mcd_email,
+        "mla_email": mla_email,
+        "mla_name": mla_name,
+    }
 
 
 @app.get("/uploads/{filename}")

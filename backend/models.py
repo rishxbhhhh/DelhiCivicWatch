@@ -361,4 +361,33 @@ for ward_name, const_id in MCD_WARDS:
         CONSTITUENCY_WARDS[const_id_str] = []
     CONSTITUENCY_WARDS[const_id_str].append(ward_name)
 
+# MCD Zone → official complaint email
+# Constituency → zone derived from ward assignments
+MCD_ZONE_EMAILS = {
+    "Narela": "complaint-narela@mcd.org.in",
+    "Civil Lines": "complaint-civil-lines@mcd.org.in",
+    "Sadar Paharganj": "complaint-sadar-paharganj@mcd.org.in",
+    "Keshav Puram": "complaint-keshav-puram@mcd.org.in",
+    "West": "complaint-west@mcd.org.in",
+    "Najafgarh": "complaint-najafgarh@mcd.org.in",
+    "South": "complaint-south@mcd.org.in",
+    "Central": "complaint-central@mcd.org.in",
+    "Shahdara North": "complaint-shahdara-north@mcd.org.in",
+    "Shahdara South": "complaint-shahdara-south@mcd.org.in",
+}
+
+# Map constituency ID → MCD zone name (derived from ward suffixes)
+CONSTITUENCY_MCD_ZONE = {}
+zone_suffix_map = {
+    "N": "Narela", "C": "Civil Lines", "SP": "Sadar Paharganj",
+    "KP": "Keshav Puram", "W": "West", "NJ": "Najafgarh",
+    "S": "South", "CZ": "Central", "SN": "Shahdara North",
+    "SS": "Shahdara South",
+}
+for ward_name, const_id in MCD_WARDS:
+    for suffix, zone in zone_suffix_map.items():
+        if f"-{suffix} " in ward_name or ward_name.endswith(f"-{suffix}"):
+            CONSTITUENCY_MCD_ZONE[str(const_id)] = zone
+            break
+
 Base.metadata.create_all(bind=engine)

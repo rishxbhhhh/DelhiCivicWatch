@@ -143,6 +143,7 @@ async function loadConstituencyIssues(constId) {
         }
         container.innerHTML = issues.map(i => issueItemHTML(i)).join('');
         bindUpvoteButtons(container);
+        bindEmailMCDButtons(container);
     } catch (err) { container.innerHTML = ''; }
 }
 
@@ -201,11 +202,13 @@ async function loadListView(page = 0) {
                     ${renderImages(i)}
                     <div class="list-actions">
                         <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
+                        <button class="email-mcd-btn" data-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}" data-images="${escapeHtml(i.images || '[]')}">📧 Email MCD</button>
                         ${!i.resolved ? `<button class="resolve-btn" data-id="${i.id}">✅ Resolve</button>` : ''}
                     </div>
                 </div>`}).join('');
             bindUpvoteButtons(container);
             bindResolveButtons(container);
+            bindEmailMCDButtons(container);
         }
 
         renderPagination(total, page);
@@ -265,6 +268,7 @@ function issueItemHTML(i) {
             ${i.upvotes >= 3 ? '<span class="verified-tag">✓ Verified</span>' : ''}
             <span style="flex:1;min-width:0;">${escapeHtml(i.issue_summary).substring(0, 90)}${(i.issue_summary||'').length > 90 ? '...' : ''}</span>
             <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
+            <button class="email-mcd-btn" data-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}">📧</button>
         </div>`;
 }
 
@@ -305,6 +309,40 @@ function bindResolveButtons(container) {
             e.stopPropagation();
             resolveTargetId = btn.dataset.id;
             openResolveModal();
+        });
+    });
+}
+
+function bindEmailMCDButtons(container) {
+    container.querySelectorAll('.email-mcd-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const constId = btn.dataset.constituency;
+            const summary = btn.dataset.summary || '';
+            const images = JSON.parse(btn.dataset.images || '[]');
+
+            try {
+                const res = await fetch(`${API}/api/mcd-email?constituency_id=${constId}`);
+                const data = await res.json();
+
+                const to = data.mcd_email || '';
+                const cc = data.mla_email || '';
+                const subject = encodeURIComponent(`Civic Complaint: ${summary.substring(0, 80)}`);
+                let body = `To the Municipal Corporation of Delhi,\n\n`;
+                body += `I wish to report the following civic issue:\n\n`;
+                body += `"${summary}"\n\n`;
+                body += `Location: ${data.mcd_zone || 'Delhi'} zone, Constituency: ${constId}\n`;
+                if (images.length > 0) {
+                    body += `\nPhotos attached:\n`;
+                    images.forEach(fn => { body += `${API}/uploads/${fn}\n`; });
+                }
+                body += `\n\n---\nSent via Delhi Civic Watch`;
+                if (cc) body += `\nMLA ${data.mla_name || ''} in CC`;
+
+                window.location.href = `mailto:${to}?cc=${cc}&subject=${subject}&body=${encodeURIComponent(body)}`;
+            } catch {
+                showToast('Could not load MCD email');
+            }
         });
     });
 }
