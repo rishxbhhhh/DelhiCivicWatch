@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+issues.db
+uploads/
+.git/
+*.db-journal
+*.db-wal

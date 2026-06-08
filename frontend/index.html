@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Delhi Civic Watch — Report & Track Civic Issues</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ====== HEADER ====== -->
+    <header>
+        <div class="header-top">
+            <div class="brand">
+                <span class="brand-icon">🏛️</span>
+                <div class="brand-text">
+                    <h1>Delhi<span class="accent">CivicWatch</span></h1>
+                    <p class="brand-tagline">Report civic issues. Track resolutions. Hold your city accountable.</p>
+                </div>
+            </div>
+            <button id="report-fab" class="fab-btn">✏️ Report</button>
+        </div>
+        <nav class="header-nav">
+            <button class="nav-btn active" data-view="map">Map</button>
+            <button class="nav-btn" data-view="list">Browse</button>
+            <button class="nav-btn" data-view="leaderboard">Leaderboard</button>
+            <button class="nav-btn" data-view="digest">Weekly Digest</button>
+        </nav>
+        <!-- Storage pause banner (hidden by default) -->
+        <div id="storage-banner" class="storage-banner hidden"></div>
+    </header>
+
+    <!-- ====== STATS BAR ====== -->
+    <div class="stats-bar">
+        <div class="stat-box active">
+            <span class="stat-num" id="stat-active">—</span>
+            <span class="stat-label">Active</span>
+        </div>
+        <div class="stat-box total">
+            <span class="stat-num" id="stat-total">—</span>
+            <span class="stat-label">Reports</span>
+        </div>
+        <div class="stat-box resolved-box">
+            <span class="stat-num" id="stat-resolved">—</span>
+            <span class="stat-label">Resolved</span>
+        </div>
+        <div class="stat-box upvote-box">
+            <span class="stat-num" id="stat-upvotes">—</span>
+            <span class="stat-label">Upvotes</span>
+        </div>
+    </div>
+
+    <!-- ====== FILTER BAR ====== -->
+    <div class="filter-bar" id="filter-bar">
+        <select id="filter-category" class="filter-select">
+            <option value="All">All Categories</option>
+        </select>
+        <select id="filter-ward" class="filter-select">
+            <option value="">All Wards</option>
+        </select>
+        <select id="filter-status" class="filter-select">
+            <option value="All">All Status</option>
+            <option value="active">Active</option>
+            <option value="resolved">Resolved</option>
+        </select>
+        <select id="filter-sort" class="filter-select">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="upvotes">Most Upvoted</option>
+        </select>
+    </div>
+
+    <!-- ====== MAIN CONTENT ====== -->
+    <main>
+        <!-- MAP VIEW -->
+        <div id="view-map" class="view-panel">
+            <div id="map"></div>
+            <div id="info-card" class="info-card hidden">
+                <div class="card-top">
+                    <div>
+                        <h3 id="card-name"></h3>
+                        <span id="card-ward-badge" class="ward-badge hidden"></span>
+                    </div>
+                    <button id="card-close" class="icon-btn">&times;</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-row"><strong>MLA:</strong> <span id="card-mla"></span> <span id="card-party" class="party-badge"></span></div>
+                    <div class="card-row"><strong>Contact:</strong> <span id="card-contact"></span></div>
+                    <div class="card-row"><strong>Email:</strong> <span id="card-email"></span></div>
+                    <div class="card-row" id="card-response-row"><strong>Response:</strong> <span id="card-response-time"></span></div>
+                    <div class="card-stats">
+                        <div class="cstat"><span id="card-reported">0</span> Reported</div>
+                        <div class="cstat"><span id="card-resolved">0</span> Resolved</div>
+                        <div class="cstat"><span id="card-active">0</span> Active</div>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button id="card-report-btn" class="btn primary">📝 Report Issue</button>
+                    <button id="card-email-btn" class="btn outline">📧 Email MLA</button>
+                    <button id="card-watch-btn" class="btn outline-sm">🔔 Watch</button>
+                </div>
+                <div class="card-issues" id="card-issues-list"></div>
+            </div>
+        </div>
+
+        <!-- LIST VIEW -->
+        <div id="view-list" class="view-panel hidden">
+            <div id="issues-list"></div>
+            <div id="pagination" class="pagination hidden"></div>
+        </div>
+
+        <!-- LEADERBOARD VIEW -->
+        <div id="view-leaderboard" class="view-panel hidden">
+            <div class="lb-container">
+                <h2>🏆 Constituency Leaderboard</h2>
+                <p class="lb-subtitle">Ranked by resolution rate. Which MLAs deliver?</p>
+                <div id="leaderboard-table"></div>
+            </div>
+        </div>
+
+        <!-- DIGEST VIEW -->
+        <div id="view-digest" class="view-panel hidden">
+            <div class="lb-container">
+                <h2>📊 Weekly Digest</h2>
+                <p class="lb-subtitle" id="digest-dates"></p>
+                <div id="digest-table"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ====== REPORT MODAL ====== -->
+    <div id="report-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Report a Civic Issue</h2>
+                <button id="modal-close" class="icon-btn">&times;</button>
+            </div>
+            <form id="report-form">
+                <div class="form-group">
+                    <label>Constituency <span class="req">*</span></label>
+                    <select id="form-constituency" required><option value="">Select...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Ward / Area</label>
+                    <select id="form-ward"><option value="">Select ward (optional)</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Category <span class="req">*</span></label>
+                    <select id="form-category" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Describe the issue <span class="req">*</span></label>
+                    <textarea id="form-description" rows="3" placeholder="E.g., Garbage not collected for 5 days near the park..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <div class="location-row">
+                        <button type="button" id="detect-location-btn" class="btn small outline">📍 Use My Location</button>
+                        <span id="location-status" class="loc-status"></span>
+                    </div>
+                    <div id="location-picker-map" class="location-picker hidden"></div>
+                    <button type="button" id="pick-on-map-btn" class="btn small outline" style="margin-top:6px;">🗺️ Pick on Map</button>
+                    <input type="hidden" id="form-lat"><input type="hidden" id="form-lng">
+                </div>
+                <div class="form-group">
+                    <label>Photos (up to 3)</label>
+                    <div class="photo-slots" id="photo-slots"></div>
+                </div>
+                <div class="form-group">
+                    <label>Your Name <span class="optional">(leave blank to stay anonymous)</span></label>
+                    <input type="text" id="form-name" placeholder="Anonymous">
+                </div>
+                <div class="form-group">
+                    <label>Contact <span class="optional">(optional)</span></label>
+                    <input type="tel" id="form-contact" placeholder="For follow-up only">
+                </div>
+                <button type="submit" id="form-submit" class="btn primary full">🚀 Submit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== RESOLVE MODAL ====== -->
+    <div id="resolve-modal" class="modal-overlay hidden">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2>Mark as Resolved</h2>
+                <button id="resolve-modal-close" class="icon-btn">&times;</button>
+            </div>
+            <form id="resolve-form">
+                <div class="form-group">
+                    <label>After photo <span class="optional">(proof of resolution)</span></label>
+                    <div class="photo-slots" id="resolve-photo-slot">
+                        <label class="photo-slot add-slot">
+                            <input type="file" id="resolve-photo-input" accept="image/*" capture="environment" hidden>
+                            <span class="plus">+</span>
+                            <span class="photo-hint">Add After Photo</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn primary full">✅ Confirm Resolution</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== SUBSCRIBE MODAL ====== -->
+    <div id="subscribe-modal" class="modal-overlay hidden">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2>🔔 Watch This Area</h2>
+                <button id="subscribe-modal-close" class="icon-btn">&times;</button>
+            </div>
+            <form id="subscribe-form">
+                <p class="modal-desc">Get alerts when new issues are reported or resolved here.</p>
+                <div class="form-group">
+                    <label>Your Email</label>
+                    <input type="email" id="subscribe-email" placeholder="you@email.com" required>
+                </div>
+                <button type="submit" class="btn primary full">Subscribe</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== TOAST ====== -->
+    <div id="toast" class="toast hidden"><span id="toast-msg"></span></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

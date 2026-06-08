@@ -1,0 +1,35 @@
+# Fly.io config — deploy with: fly launch
+app = "delhi-civic-watch"
+primary_region = "bom"  # Mumbai — lowest latency for Indian users
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DATABASE_URL = "sqlite:////app/data/issues.db"
+  DATA_DIR = "/app/data"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "dcw_data"
+  destination = "/app/data"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
