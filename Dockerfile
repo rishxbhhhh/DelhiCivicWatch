@@ -17,8 +17,8 @@ COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY data/ ./data/
 
-# Create uploads and data dirs
-RUN mkdir -p uploads /app/data
+# Create uploads and storage dirs
+RUN mkdir -p uploads /app/storage
 
 EXPOSE 8000
 
