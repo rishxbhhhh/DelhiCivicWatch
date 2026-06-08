@@ -139,6 +139,37 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}" if TELEGRAM_BOT_TOKEN else ""
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
 
+# Brevo (Sendinblue) — 300 free emails/day
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+NOTIFICATION_EMAIL = os.getenv("NOTIFICATION_EMAIL", "alerts@delhicivicwatch.in")
+
+
+def send_email(to_email: str, subject: str, html_body: str) -> bool:
+    """Send email via Brevo API. Returns True if sent."""
+    if not BREVO_API_KEY:
+        return False
+    try:
+        import urllib.request, json as _json
+        payload = _json.dumps({
+            "sender": {"name": "Delhi Civic Watch", "email": NOTIFICATION_EMAIL},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_body,
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=payload,
+            headers={
+                "api-key": BREVO_API_KEY,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        urllib.request.urlopen(req, timeout=10)
+        return True
+    except Exception:
+        return False
+
 
 def send_telegram(chat_id: str, text: str) -> bool:
     """Send a message to a Telegram chat. Returns True if sent."""
@@ -155,34 +186,56 @@ def send_telegram(chat_id: str, text: str) -> bool:
 
 
 def notify_subscribers(constituency_id: str, constituency_name: str, issue_summary: str, category: str, is_new: bool = True):
-    """Notify Telegram subscribers when an issue is created or resolved."""
+    """Notify Telegram AND email subscribers when an issue is created or resolved."""
     db = SessionLocal()
     try:
-        subs = db.query(WatchSubscription).filter(
+        # --- Telegram subscribers ---
+        tg_subs = db.query(WatchSubscription).filter(
             WatchSubscription.chat_id.isnot(None),
             (WatchSubscription.constituency_id == constituency_id) |
-            (WatchSubscription.constituency_id.is_(None))  # all-area watchers
+            (WatchSubscription.constituency_id.is_(None))
         ).all()
 
-        if not subs:
-            return
-
         if is_new:
-            text = (
+            tg_text = (
                 f"🆕 <b>New Issue in {constituency_name}</b>\n"
                 f"📂 {category}\n"
                 f"📝 {issue_summary[:200]}\n\n"
                 f"<a href=\"{APP_URL}\">View on Delhi Civic Watch</a>"
             )
+            email_subject = f"🆕 New Issue in {constituency_name}"
         else:
-            text = (
+            tg_text = (
                 f"✅ <b>Issue Resolved in {constituency_name}</b>\n"
                 f"📝 {issue_summary[:200]}\n\n"
                 f"<a href=\"{APP_URL}\">View on Delhi Civic Watch</a>"
             )
+            email_subject = f"✅ Issue Resolved in {constituency_name}"
 
-        for sub in subs:
-            send_telegram(sub.chat_id, text)
+        for sub in tg_subs:
+            send_telegram(sub.chat_id, tg_text)
+
+        # --- Email subscribers ---
+        email_subs = db.query(WatchSubscription).filter(
+            WatchSubscription.email.isnot(None),
+            (WatchSubscription.constituency_id == constituency_id) |
+            (WatchSubscription.constituency_id.is_(None))
+        ).all()
+
+        if email_subs:
+            email_body = f"""
+            <div style="font-family:Arial,sans-serif;max-width:600px;padding:20px;">
+                <h2>{'🆕 New Issue' if is_new else '✅ Issue Resolved'} in {constituency_name}</h2>
+                <p><strong>Category:</strong> {category}</p>
+                <p><strong>Issue:</strong> {issue_summary[:300]}</p>
+                <hr>
+                <p><a href="{APP_URL}" style="color:#d93025;">View on Delhi Civic Watch</a></p>
+                <p style="color:#999;font-size:12px;">You received this because you subscribed to alerts for {constituency_name or 'all of Delhi'}.
+                To unsubscribe, reply to this email.</p>
+            </div>
+            """
+            for sub in email_subs:
+                send_email(sub.email, email_subject, email_body)
     finally:
         db.close()
 

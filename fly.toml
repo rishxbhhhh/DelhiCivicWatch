@@ -12,7 +12,8 @@ primary_region = 'bom'
 [env]
   DATABASE_URL = "sqlite:////app/storage/issues.db"
   DATA_DIR = "/app/storage"
-  TELEGRAM_BOT_TOKEN = ""     # Set this after creating bot with @BotFather
+  TELEGRAM_BOT_TOKEN = ""     # Set after creating bot with @BotFather
+  BREVO_API_KEY = ""         # Set after signing up at brevo.com (300 free emails/day)
   APP_URL = "https://delhi-civic-watch.fly.dev"
 
 [[mounts]]

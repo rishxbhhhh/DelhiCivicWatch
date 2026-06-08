@@ -211,11 +211,22 @@
                 <button id="subscribe-modal-close" class="icon-btn">&times;</button>
             </div>
             <div class="modal-body-padded">
-                <p class="modal-desc">Get instant Telegram alerts when issues are reported or resolved in this area.</p>
-                <a id="telegram-bot-link" href="https://t.me/DelhiCivicWatchBot" target="_blank" class="btn primary full telegram-btn">
-                    🚀 Open Telegram Bot
+                <p class="modal-desc">Get alerts when issues are reported or resolved here.</p>
+
+                <a id="telegram-bot-link" href="https://t.me/DelhiCivicWatchBot" target="_blank" class="btn primary full telegram-btn" style="margin-bottom:12px;">
+                    📱 Subscribe via Telegram
                 </a>
-                <p class="modal-hint">Tap the button above → press <strong>Start</strong> in Telegram. You're done!</p>
+
+                <div class="or-divider"><span>or</span></div>
+
+                <form id="subscribe-email-form" style="text-align:left;">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="subscribe-email" placeholder="you@email.com" required>
+                    </div>
+                    <button type="submit" class="btn outline full">📧 Subscribe via Email</button>
+                </form>
+                <p class="modal-hint">Telegram is instant. Email uses Brevo (300/day free tier).</p>
             </div>
         </div>
     </div>
