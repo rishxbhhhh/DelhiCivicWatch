@@ -368,21 +368,21 @@ function openSubscribeModal(c) {
     const botLink = document.getElementById('telegram-bot-link');
     botLink.href = 'https://t.me/DelhiCivicWatchBot';
 
-    // Email form handler
-    document.getElementById('subscribe-email-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('subscribe-email').value.trim();
-        if (!email) return;
-        try {
-            const res = await fetch(`${API}/api/subscribe`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, constituency_id: c ? c.id : null }),
-            });
-            const data = await res.json();
-            closeSubscribeModal();
-            showToast('📧 ' + data.message);
-        } catch { showToast('Subscription failed'); }
-    };
+    // Email form — disabled until sender domain is verified
+    // document.getElementById('subscribe-email-form').onsubmit = async (e) => {
+    //     e.preventDefault();
+    //     const email = document.getElementById('subscribe-email').value.trim();
+    //     if (!email) return;
+    //     try {
+    //         const res = await fetch(`${API}/api/subscribe`, {
+    //             method: 'POST', headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify({ email, constituency_id: c ? c.id : null }),
+    //         });
+    //         const data = await res.json();
+    //         closeSubscribeModal();
+    //         showToast('📧 ' + data.message);
+    //     } catch { showToast('Subscription failed'); }
+    // };
 }
 
 function closeSubscribeModal() {
