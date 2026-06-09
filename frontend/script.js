@@ -302,6 +302,7 @@ function bindUpvoteButtons(container) {
 // RESOLVE (with before/after photo)
 // ============================================================
 let resolveTargetId = null;
+let resolvePhotoFile = null;  // track selected file separately
 
 function bindResolveButtons(container) {
     container.querySelectorAll('.resolve-btn').forEach(btn => {
@@ -348,9 +349,9 @@ function bindEmailMCDButtons(container) {
 }
 
 function openResolveModal() {
+    resolvePhotoFile = null;  // reset on modal open
     document.getElementById('resolve-modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    // Reset photo
     const slot = document.getElementById('resolve-photo-slot');
     slot.innerHTML = `
         <label class="photo-slot add-slot">
@@ -358,7 +359,19 @@ function openResolveModal() {
             <span class="plus">+</span>
             <span class="photo-hint">After Photo</span>
         </label>`;
-    document.getElementById('resolve-photo-input').addEventListener('change', handleResolvePhoto);
+    document.getElementById('resolve-photo-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        resolvePhotoFile = file;  // keep reference
+        const url = URL.createObjectURL(file);
+        const slot = document.getElementById('resolve-photo-slot');
+        // Show preview WITHOUT removing the input — keep it hidden
+        slot.innerHTML = `
+            <div class="photo-slot" style="position:relative;">
+                <img src="${url}" alt="After" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">
+                <button type="button" onclick="resolvePhotoFile=null;openResolveModal()" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.5);color:white;border:none;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;">&times;</button>
+            </div>`;
+    });
 }
 
 function closeResolveModal() {
@@ -378,13 +391,12 @@ function handleResolvePhoto(e) {
 async function handleResolveSubmit(e) {
     e.preventDefault();
     if (!resolveTargetId) return;
-    const photoInput = document.getElementById('resolve-photo-input');
-    if (!photoInput || !photoInput.files || !photoInput.files[0]) {
+    if (!resolvePhotoFile) {
         showToast('⚠️ Please upload an "after" photo as proof of resolution');
         return;
     }
     const formData = new FormData();
-    formData.append('resolution_photo', photoInput.files[0]);
+    formData.append('resolution_photo', resolvePhotoFile);
     try {
         const res = await fetch(`${API}/api/issues/${resolveTargetId}/resolve`, { method: 'POST', body: formData });
         if (!res.ok) throw new Error('Failed');

@@ -602,7 +602,13 @@ async def telegram_webhook(request: dict, db=Depends(get_db)):
                 WatchSubscription.chat_id == chat_id
             ).first()
             if existing:
-                send_telegram(chat_id, "👋 You're already subscribed to Delhi Civic Watch alerts!\n\nUse /watch <constituency> to change area, or /unwatch to stop.")
+                send_telegram(chat_id,
+                    "👋 You're already subscribed! Use these commands:\n\n"
+                    "📌 <b>Commands:</b>\n"
+                    "/watch Narela — watch a specific constituency\n"
+                    "/unwatch — stop all alerts\n"
+                    "/status — see your subscriptions"
+                )
             else:
                 # Subscribe to all Delhi by default
                 sub = WatchSubscription(chat_id=chat_id, verified=True)
@@ -610,11 +616,21 @@ async def telegram_webhook(request: dict, db=Depends(get_db)):
                 db.commit()
                 send_telegram(chat_id,
                     "🏛️ <b>Welcome to Delhi Civic Watch!</b>\n\n"
-                    "You'll get alerts for new and resolved civic issues across Delhi.\n\n"
-                    "Commands:\n"
-                    "/watch Narela — watch a specific constituency\n"
-                    "/unwatch — stop all alerts\n"
-                    "/status — see your subscriptions"
+                    "You'll receive alerts for new and resolved civic issues across Delhi.\n\n"
+                    "📌 <b>Commands:</b>\n\n"
+                    "🔹 <b>Subscribe to a constituency:</b>\n"
+                    "/watch Karol Bagh\n"
+                    "/watch Narela\n"
+                    "/watch Burari\n"
+                    "...or any of the 70 Delhi constituencies.\n\n"
+                    "🔹 <b>Unsubscribe:</b>\n"
+                    "/unwatch — stop all alerts\n\n"
+                    "🔹 <b>Check subscriptions:</b>\n"
+                    "/status — see which areas you're watching\n\n"
+                    "🔹 <b>Watch all of Delhi (default):</b>\n"
+                    "/start — you're already subscribed to all Delhi!\n\n"
+                    "<i>You can run /watch multiple times to watch several constituencies.\n"
+                    "Example: /watch Karol Bagh then /watch Rohini watches both.</i>"
                 )
         elif text.startswith("/unwatch"):
             db.query(WatchSubscription).filter(WatchSubscription.chat_id == chat_id).delete()
