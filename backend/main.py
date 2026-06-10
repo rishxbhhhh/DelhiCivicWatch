@@ -422,8 +422,8 @@ async def create_issue(
         )
 
     # Enforce 1000-char limit on issue summary
-    if len(issue_summary) > 1000:
-        raise HTTPException(status_code=400, detail="Issue summary cannot exceed 1000 characters")
+    if len(issue_summary) > 4000:
+        raise HTTPException(status_code=400, detail="Issue summary cannot exceed 4000 characters")
 
     image_paths = []
     for img in images[:3]:

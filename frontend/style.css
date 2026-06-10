@@ -270,6 +270,14 @@ main { height: calc(100vh - 190px); position: relative; }
 .modal form { padding: 16px 20px; }
 .modal-desc { font-size: .82rem; color: var(--gray-600); margin-bottom: 12px; }
 .modal-body-padded { padding: 16px 20px; text-align: center; }
+.modal-body-padded-left { padding: 20px; text-align: left; }
+.detail-full-text { font-size: .88rem; line-height: 1.7; color: var(--gray-900); margin-bottom: 16px; white-space: pre-wrap; }
+.detail-meta { font-size: .78rem; color: var(--gray-600); margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 16px; }
+.detail-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.detail-images { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+.detail-images img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform .15s; }
+.detail-images img:hover { transform: scale(1.05); }
+.view-detail-btn { background: none; border: 1px solid var(--gray-300); color: var(--gray-900); font-size: .7rem; padding: 3px 10px; border-radius: 12px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
 .modal-hint { font-size: .72rem; color: var(--gray-600); margin-top: 10px; }
 .telegram-btn { display: inline-block; text-decoration: none; background: #0088cc !important; }
 .or-divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; color: var(--gray-600); font-size: .75rem; }

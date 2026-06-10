@@ -1,10 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Delhi Civic Watch — Report & Track Civic Issues</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -146,7 +139,7 @@
                 </div>
                 <div class="form-group">
                     <label>Ward / Area</label>
-                    <select id="form-ward"><option value="">Select ward (optional)</option></select>
+                    <select id="form-ward"><option value="">Select constituency first</option></select>
                 </div>
                 <div class="form-group">
                     <label>Category <span class="req">*</span></label>
@@ -154,8 +147,8 @@
                 </div>
                 <div class="form-group">
                     <label>Describe the issue <span class="req">*</span></label>
-                    <textarea id="form-description" rows="3" maxlength="1000" placeholder="E.g., Garbage not collected for 5 days near the park..." required></textarea>
-                    <div class="char-counter"><span id="char-count">0</span>/1000</div>
+                    <textarea id="form-description" rows="3" maxlength="4000" placeholder="E.g., Garbage not collected for 5 days near the park..." required></textarea>
+                    <div class="char-counter"><span id="char-count">0</span>/4000</div>
                 </div>
                 <div class="form-group">
                     <label>Location</label>
@@ -204,6 +197,17 @@
                 </div>
                 <button type="submit" class="btn primary full">✅ Confirm Resolution</button>
             </form>
+        </div>
+    </div>
+
+    <!-- ====== COMPLAINT DETAIL MODAL ====== -->
+    <div id="detail-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="detail-title">Complaint Details</h2>
+                <button id="detail-modal-close" class="icon-btn">&times;</button>
+            </div>
+            <div id="detail-body" class="modal-body-padded-left"></div>
         </div>
     </div>
 

@@ -193,7 +193,7 @@ async function loadListView(page = 0) {
                         <span class="list-constituency">${escapeHtml(i.constituency_id)} ${i.ward ? '· ' + escapeHtml(i.ward) : ''}</span>
                         <span class="list-category${i.resolved ? ' resolved-tag' : ''}">${i.resolved ? '✅ Resolved' : escapeHtml(i.issue_category || 'General')}</span>
                     </div>
-                    <div class="list-summary">${escapeHtml(i.issue_summary)}</div>
+                    <div class="list-summary">${truncateText(escapeHtml(i.issue_summary), 200)}</div>
                     <div class="list-meta">
                         <span>👤 ${escapeHtml(i.complainant_name || 'Anonymous')}</span>
                         <span>🕐 ${new Date(i.created_at).toLocaleDateString()}</span>
@@ -204,6 +204,7 @@ async function loadListView(page = 0) {
                     ${renderImages(i)}
                     <div class="list-actions">
                         <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
+                        <button class="view-detail-btn" onclick="openComplaintDetail(${i.id})">👁 Details</button>
                         <button class="email-mcd-btn" data-issue-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}">📧 Email MCD</button>
                         ${adminToken ? `<button class="admin-delete-btn" onclick="adminDeleteComplaint(${i.id})">✕</button>` : ''}
                         ${!i.resolved ? `<button class="resolve-btn" data-id="${i.id}">✅ Resolve</button>` : ''}
@@ -269,8 +270,9 @@ function issueItemHTML(i) {
         <div class="issue-item">
             <span class="cat-tag${i.resolved ? ' resolved-tag' : ''}">${i.resolved ? '✓ Done' : escapeHtml(i.issue_category || 'General')}</span>
             ${i.upvotes >= 3 ? '<span class="verified-tag">✓ Verified</span>' : ''}
-            <span style="flex:1;min-width:0;">${escapeHtml(i.issue_summary).substring(0, 90)}${(i.issue_summary||'').length > 90 ? '...' : ''}</span>
+            <span style="flex:1;min-width:0;">${truncateText(escapeHtml(i.issue_summary), 200)}</span>
             <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
+            <button class="view-detail-btn" onclick="openComplaintDetail(${i.id})">👁</button>
             <button class="email-mcd-btn" data-issue-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}">📧</button>
         </div>`;
 }
@@ -487,8 +489,8 @@ function openReportModal(preselected) {
         charCount.textContent = len;
         const counter = document.getElementById('char-count').parentElement;
         counter.classList.remove('limit-near', 'limit-reached');
-        if (len >= 950) counter.classList.add('limit-reached');
-        else if (len >= 800) counter.classList.add('limit-near');
+        if (len >= 3950) counter.classList.add('limit-reached');
+        else if (len >= 3200) counter.classList.add('limit-near');
     }
     desc.addEventListener('input', updateCharCount);
     updateCharCount();
@@ -867,6 +869,9 @@ function setupEventListeners() {
     document.getElementById('subscribe-modal-close').addEventListener('click', closeSubscribeModal);
     document.getElementById('subscribe-modal').addEventListener('click', e => { if (e.target.id === 'subscribe-modal') closeSubscribeModal(); });
 
+    document.getElementById('detail-modal-close').addEventListener('click', closeDetailModal);
+document.getElementById('detail-modal').addEventListener('click', e => { if (e.target.id === 'detail-modal') closeDetailModal(); });
+
     document.getElementById('admin-modal-close').addEventListener('click', closeAdminModal);
     document.getElementById('admin-modal').addEventListener('click', e => { if (e.target.id === 'admin-modal') closeAdminModal(); });
 
@@ -894,6 +899,11 @@ function partyColor(party) {
     return m[party] || '#95a5a6';
 }
 
+function truncateText(text, maxLen) {
+    if (!text) return '';
+    return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
+}
+
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str || ''; return div.innerHTML;
@@ -903,6 +913,56 @@ function formatHours(h) {
     if (h < 1) return '<1h';
     if (h < 24) return `${Math.round(h)}h`;
     return `${Math.round(h / 24)}d`;
+}
+
+// ============================================================
+// COMPLAINT DETAIL MODAL
+// ============================================================
+async function openComplaintDetail(id) {
+    try {
+        const res = await fetch(`${API}/api/issues?limit=1`);
+        const data = await res.json();
+        const issues = data.issues || [];
+        const issue = issues.find(i => i.id === id);
+        if (!issue) { showToast('Complaint not found'); return; }
+
+        // Format IST time
+        const date = new Date(issue.created_at);
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istDate = new Date(date.getTime() + istOffset);
+        const formattedDate = istDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        // Build images HTML
+        let imagesHtml = '';
+        try {
+            const imgs = typeof issue.images === 'string' ? JSON.parse(issue.images) : (issue.images || []);
+            if (imgs.length > 0) {
+                imagesHtml = '<div class="detail-images">' + imgs.map(fn => `<img src="${API}/uploads/${fn}" alt="Complaint photo" onclick="window.open(this.src)">`).join('') + '</div>';
+            }
+        } catch {}
+
+        document.getElementById('detail-title').textContent = `Complaint #${issue.id}`;
+        document.getElementById('detail-body').innerHTML = `
+            <div class="detail-meta">
+                <span>🏛️ ${escapeHtml(issue.constituency_id)} ${issue.ward ? '· ' + escapeHtml(issue.ward) : ''}</span>
+                <span>📂 ${escapeHtml(issue.issue_category || 'General')}</span>
+                <span>🕐 ${formattedDate} IST</span>
+                <span>👤 ${escapeHtml(issue.complainant_name || 'Anonymous')}</span>
+                <span>${issue.resolved ? '✅ Resolved' : '🔴 Active'}</span>
+                <span>👍 ${issue.upvotes || 0}</span>
+                ${issue.upvotes >= 3 ? '<span style="color:var(--blue);font-weight:600;">✓ Verified</span>' : ''}
+            </div>
+            ${imagesHtml}
+            <div class="detail-full-text">${escapeHtml(issue.issue_summary)}</div>
+        `;
+        document.getElementById('detail-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } catch { showToast('Could not load details'); }
+}
+
+function closeDetailModal() {
+    document.getElementById('detail-modal').classList.add('hidden');
+    document.body.style.overflow = '';
 }
 
 // ============================================================

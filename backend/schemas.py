@@ -10,7 +10,7 @@ class IssueCreate(BaseModel):
     complainant_name: Optional[str] = None
     complainant_address: Optional[str] = None
     contact_number: Optional[str] = None
-    issue_summary: str = Field(..., min_length=5, max_length=1000)
+    issue_summary: str = Field(..., min_length=5, max_length=4000)
     issue_category: Optional[str] = "Garbage"
     latitude: Optional[float] = None
     longitude: Optional[float] = None
