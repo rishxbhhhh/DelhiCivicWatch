@@ -971,10 +971,10 @@ function closeDetailModal() {
 function initAdmin() {
     const btn = document.getElementById('admin-btn');
     if (adminToken) {
-        btn.textContent = '🔓'; btn.classList.add('logged-in'); btn.title = 'Logout';
+        btn.innerHTML = '🔓 Admin'; btn.classList.add('logged-in');
     }
     btn.addEventListener('click', () => {
-        if (adminToken) { adminToken = ''; localStorage.removeItem('dcw_admin_token'); showToast('Logged out'); btn.textContent = '🔑'; btn.classList.remove('logged-in'); btn.title = 'Admin'; refreshAfterAdmin(); }
+        if (adminToken) { adminToken = ''; localStorage.removeItem('dcw_admin_token'); showToast('Logged out'); btn.innerHTML = '🔑 Admin'; btn.classList.remove('logged-in'); refreshAfterAdmin(); }
         else { openAdminLogin(); }
     });
 }
@@ -995,7 +995,7 @@ function openAdminLogin() {
             closeAdminModal();
             showToast('✅ Admin logged in');
             const btn = document.getElementById('admin-btn');
-            btn.textContent = '🔓'; btn.classList.add('logged-in'); btn.title = 'Logout';
+            btn.innerHTML = '🔓 Admin'; btn.classList.add('logged-in');
             refreshAfterAdmin();
         } catch { showToast('Login failed'); }
     };
