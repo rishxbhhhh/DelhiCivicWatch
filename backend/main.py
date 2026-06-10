@@ -597,7 +597,7 @@ async def telegram_webhook(request: Request, db=Depends(get_db)):
         if not chat_id:
             return {"ok": True}
 
-        if text.startswith("/start"):
+        if text.lower().strip() in ("/start", "start"):
             # Check if already subscribed
             existing = db.query(WatchSubscription).filter(
                 WatchSubscription.chat_id == chat_id

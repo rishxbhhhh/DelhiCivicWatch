@@ -204,7 +204,7 @@ async function loadListView(page = 0) {
                     ${renderImages(i)}
                     <div class="list-actions">
                         <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
-                        <button class="email-mcd-btn" data-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}" data-images="${escapeHtml(i.images || '[]')}">📧 Email MCD</button>
+                        <button class="email-mcd-btn" data-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;').substring(0, 200)}">📧 Email MCD</button>
                         ${adminToken ? `<button class="admin-delete-btn" onclick="adminDeleteComplaint(${i.id})">✕</button>` : ''}
                         ${!i.resolved ? `<button class="resolve-btn" data-id="${i.id}">✅ Resolve</button>` : ''}
                     </div>
@@ -323,7 +323,6 @@ function bindEmailMCDButtons(container) {
             e.stopPropagation();
             const constId = btn.dataset.constituency;
             const summary = btn.dataset.summary || '';
-            const images = JSON.parse(btn.dataset.images || '[]');
 
             try {
                 const res = await fetch(`${API}/api/mcd-email?constituency_id=${constId}`);
@@ -331,16 +330,12 @@ function bindEmailMCDButtons(container) {
 
                 const to = data.mcd_email || '';
                 const cc = data.mla_email || '';
-                const subject = encodeURIComponent(`Civic Complaint: ${summary.substring(0, 80)}`);
+                const subject = encodeURIComponent(`Civic Complaint: ${summary.substring(0, 200)}`);
                 let body = `To the Municipal Corporation of Delhi,\n\n`;
                 body += `I wish to report the following civic issue:\n\n`;
                 body += `"${summary}"\n\n`;
                 body += `Location: ${data.mcd_zone || 'Delhi'} zone, Constituency: ${constId}\n`;
-                if (images.length > 0) {
-                    body += `\nPhotos attached:\n`;
-                    images.forEach(fn => { body += `${API}/uploads/${fn}\n`; });
-                }
-                body += `\n\n---\nSent via Delhi Civic Watch`;
+                body += `\n\n---\nSent via Delhi Civic Watch\n`;
                 if (cc) body += `\nMLA ${data.mla_name || ''} in CC`;
 
                 window.location.href = `mailto:${to}?cc=${cc}&subject=${subject}&body=${encodeURIComponent(body)}`;

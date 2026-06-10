@@ -189,9 +189,9 @@ main { height: calc(100vh - 190px); position: relative; }
 .list-issue .list-constituency { font-weight: 600; font-size: .82rem; }
 .list-issue .list-category { font-size: .65rem; padding: 2px 10px; border-radius: 10px; background: var(--red-light); color: var(--red); }
 .list-issue .list-category.resolved-tag { background: var(--green-light); color: var(--green); }
-.list-issue .list-summary { font-size: .8rem; color: var(--gray-600); margin-bottom: 6px; }
-.list-issue .list-meta { font-size: .7rem; color: var(--gray-600); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-.list-issue .list-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.list-issue .list-summary { font-size: .8rem; color: var(--gray-600); margin-bottom: 6px; line-height: 1.5; }
+.list-issue .list-meta { font-size: .7rem; color: var(--gray-600); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.list-issue .list-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); }
 .list-issue .list-actions button {
     font-size: .7rem; padding: 5px 12px; border-radius: 16px; cursor: pointer;
     border: 1px solid var(--gray-300); background: white; font-weight: 500;
@@ -200,10 +200,10 @@ main { height: calc(100vh - 190px); position: relative; }
 .list-issue .list-actions .upvote-btn { border-color: var(--orange); color: var(--orange); display: flex; align-items: center; gap: 3px; }
 .list-issue .list-actions .upvote-btn.upvoted { background: var(--orange-light); }
 .list-issue .list-actions .email-mcd-btn { border-color: var(--blue); color: var(--blue); }
-.list-issue .list-images { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+.list-issue .list-images { display: flex; gap: 6px; margin-top: 10px; margin-bottom: 4px; flex-wrap: wrap; }
 .list-issue .list-images img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; cursor: pointer; }
 .list-issue .list-images img.resolution-img { border: 2px solid var(--green); }
-.before-after-inline { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: .7rem; color: var(--gray-600); }
+.before-after-inline { display: flex; align-items: center; gap: 8px; margin-top: 10px; margin-bottom: 8px; font-size: .7rem; color: var(--gray-600); padding: 8px 0; border-top: 1px solid var(--gray-100); }
 .before-after-inline img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; }
 
 /* Verified badge */
