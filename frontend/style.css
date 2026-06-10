@@ -178,13 +178,16 @@ main { height: calc(100vh - 190px); position: relative; }
 }
 .issue-item .cat-tag.resolved-tag { background: var(--green-light); color: var(--green); }
 .issue-item .verified-tag { background: var(--blue-light); color: var(--blue); font-size: .62rem; padding: 2px 8px; border-radius: 10px; }
-.issue-item .upvote-btn {
-    background: none; border: 1px solid var(--gray-300); color: var(--gray-600);
-    font-size: .7rem; padding: 3px 10px; border-radius: 12px; cursor: pointer;
-    display: flex; align-items: center; gap: 3px; transition: all .15s; font-family: inherit;
+.issue-item button {
+    font-size: .68rem; padding: 4px 12px; border-radius: 14px; cursor: pointer;
+    border: 1px solid var(--gray-300); background: white; font-weight: 500;
+    font-family: inherit; white-space: nowrap; transition: all .15s;
 }
-.issue-item .upvote-btn:hover { border-color: var(--orange); color: var(--orange); }
-.issue-item .upvote-btn.upvoted { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+.issue-item button:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+.issue-item .upvote-btn { border-color: var(--orange); color: var(--orange); }
+.issue-item .upvote-btn.upvoted { background: var(--orange-light); }
+.issue-item .email-mcd-btn { border-color: var(--blue); color: var(--blue); }
+.issue-item .view-detail-btn { border-color: var(--purple); color: var(--purple); }
 .issue-item .before-after { display: flex; gap: 4px; margin-top: 4px; width: 100%; }
 .issue-item .before-after img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
 .before-label { font-size: .6rem; color: var(--gray-600); }
@@ -203,13 +206,16 @@ main { height: calc(100vh - 190px); position: relative; }
 .list-issue .list-meta { font-size: .7rem; color: var(--gray-600); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .list-issue .list-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); }
 .list-issue .list-actions button {
-    font-size: .7rem; padding: 5px 12px; border-radius: 16px; cursor: pointer;
+    font-size: .72rem; padding: 6px 14px; border-radius: 18px; cursor: pointer;
     border: 1px solid var(--gray-300); background: white; font-weight: 500;
+    transition: all .15s; font-family: inherit; white-space: nowrap;
 }
+.list-issue .list-actions button:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 .list-issue .list-actions .resolve-btn { border-color: var(--green); color: var(--green); }
 .list-issue .list-actions .upvote-btn { border-color: var(--orange); color: var(--orange); display: flex; align-items: center; gap: 3px; }
 .list-issue .list-actions .upvote-btn.upvoted { background: var(--orange-light); }
 .list-issue .list-actions .email-mcd-btn { border-color: var(--blue); color: var(--blue); }
+.list-issue .list-actions .view-detail-btn { border-color: var(--purple); color: var(--purple); display: flex; align-items: center; gap: 3px; }
 .list-issue .list-images { display: flex; gap: 6px; margin-top: 10px; margin-bottom: 4px; flex-wrap: wrap; }
 .list-issue .list-images img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; cursor: pointer; }
 .list-issue .list-images img.resolution-img { border: 2px solid var(--green); }
