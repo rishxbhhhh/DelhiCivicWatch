@@ -30,6 +30,8 @@ A crowd-sourced platform to report, track, and resolve civic issues across **Del
 | **Resolution Tracking** | Mark resolved with proof photo + response time tracking |
 | **Admin System** | 🔑 Env-secret login — admin can permanently delete complaints |
 | **One-Click Upvote** | LocalStorage dedup — same user can't upvote a complaint twice |
+| **Complaint Details Modal** | 👁 Eye icon opens full complaint with images, IST timestamp, all details |
+| **4000-Char Limit** | Description capped at 4000 chars with live counter |
 | **12 Issue Categories** | Garbage, Sewage, Potholes, Street Lights, Water Logging, and more |
 | **Mobile Responsive** | Works on phone browsers, touch-friendly, camera-ready |
 | **Pagination & Filters** | Browse 20/page, filter by ward/category/status/sort |
