@@ -31,6 +31,7 @@ header {
 .header-top {
     display: flex; justify-content: space-between; align-items: center;
     padding: 14px 16px; gap: 12px;
+    flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-icon { font-size: 1.6rem; }
