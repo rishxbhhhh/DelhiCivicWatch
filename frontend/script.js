@@ -12,6 +12,7 @@ const PAGE_SIZE = 20;
 let allCategories = [], allWards = [];
 // Upvote dedup: track which issues this browser session has upvoted
 let upvotedIssues = new Set(JSON.parse(localStorage.getItem('dcw_upvoted') || '[]'));
+let adminToken = localStorage.getItem('dcw_admin_token') || '';
 
 // ============================================================
 // INIT
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMap();
     await Promise.all([loadConstituencies(), loadCategories(), loadWards()]);
     setupEventListeners();
+    initAdmin();   // admin login/logout
     loadStats();
     setInterval(loadStats, 60000);       // Poll stats every 60s
     setInterval(loadConstituencies, 120000); // Poll constituencies every 2min
@@ -203,6 +205,7 @@ async function loadListView(page = 0) {
                     <div class="list-actions">
                         <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
                         <button class="email-mcd-btn" data-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}" data-images="${escapeHtml(i.images || '[]')}">📧 Email MCD</button>
+                        ${adminToken ? `<button class="admin-delete-btn" onclick="adminDeleteComplaint(${i.id})">✕</button>` : ''}
                         ${!i.resolved ? `<button class="resolve-btn" data-id="${i.id}">✅ Resolve</button>` : ''}
                     </div>
                 </div>`}).join('');
@@ -399,13 +402,12 @@ async function handleResolveSubmit(e) {
     formData.append('resolution_photo', resolvePhotoFile);
     try {
         const res = await fetch(`${API}/api/issues/${resolveTargetId}/resolve`, { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Failed');
+        if (!res.ok) throw new Error('Resolve failed');
         closeResolveModal();
         showToast('✅ Marked as resolved!');
-        loadListView(currentPage);
-        loadConstituencies();
-        loadStats();
-        if (selectedConstituency) loadConstituencyIssues(selectedConstituency.id);
+        // Refresh data — non-critical, don't trigger error toast
+        try { loadListView(currentPage); loadConstituencies(); loadStats(); } catch {}
+        try { if (selectedConstituency) loadConstituencyIssues(selectedConstituency.id); } catch {}
     } catch { showToast('Failed to mark as resolved'); }
 }
 
@@ -531,11 +533,12 @@ async function handleFormSubmit(e) {
         uploadedFiles.forEach(f => formData.append('images', f));
 
         const res = await fetch(`${API}/api/issues`, { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Failed');
+        if (!res.ok) throw new Error('Submission failed');
         closeReportModal();
         showToast('✅ Reported! Thank you.');
-        await loadConstituencies(); loadStats();
-        if (selectedConstituency) loadConstituencyIssues(selectedConstituency.id);
+        // Refresh data — failures here are non-critical, don't show error toast
+        try { await loadConstituencies(); loadStats(); } catch {}
+        try { if (selectedConstituency) loadConstituencyIssues(selectedConstituency.id); } catch {}
     } catch { showToast('❌ Failed. Try again.'); }
     finally { btn.disabled = false; btn.textContent = '🚀 Submit Report'; }
 }
@@ -837,6 +840,9 @@ function setupEventListeners() {
     document.getElementById('subscribe-modal-close').addEventListener('click', closeSubscribeModal);
     document.getElementById('subscribe-modal').addEventListener('click', e => { if (e.target.id === 'subscribe-modal') closeSubscribeModal(); });
 
+    document.getElementById('admin-modal-close').addEventListener('click', closeAdminModal);
+    document.getElementById('admin-modal').addEventListener('click', e => { if (e.target.id === 'admin-modal') closeAdminModal(); });
+
     // Filters
     ['filter-category', 'filter-ward', 'filter-status', 'filter-sort'].forEach(id => {
         document.getElementById(id).addEventListener('change', () => {
@@ -870,4 +876,61 @@ function formatHours(h) {
     if (h < 1) return '<1h';
     if (h < 24) return `${Math.round(h)}h`;
     return `${Math.round(h / 24)}d`;
+}
+
+// ============================================================
+// ADMIN LOGIN / DELETE
+// ============================================================
+function initAdmin() {
+    const btn = document.getElementById('admin-btn');
+    if (adminToken) {
+        btn.textContent = '🔓'; btn.classList.add('logged-in'); btn.title = 'Logout';
+    }
+    btn.addEventListener('click', () => {
+        if (adminToken) { adminToken = ''; localStorage.removeItem('dcw_admin_token'); showToast('Logged out'); btn.textContent = '🔑'; btn.classList.remove('logged-in'); btn.title = 'Admin'; refreshAfterAdmin(); }
+        else { openAdminLogin(); }
+    });
+}
+
+function openAdminLogin() {
+    document.getElementById('admin-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('admin-login-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('admin-username').value.trim();
+        const password = document.getElementById('admin-password').value;
+        try {
+            const res = await fetch(`${API}/api/admin/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username, password}) });
+            if (!res.ok) { showToast('Invalid credentials'); return; }
+            const data = await res.json();
+            adminToken = data.token;
+            localStorage.setItem('dcw_admin_token', adminToken);
+            closeAdminModal();
+            showToast('✅ Admin logged in');
+            const btn = document.getElementById('admin-btn');
+            btn.textContent = '🔓'; btn.classList.add('logged-in'); btn.title = 'Logout';
+            refreshAfterAdmin();
+        } catch { showToast('Login failed'); }
+    };
+}
+
+function closeAdminModal() {
+    document.getElementById('admin-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function refreshAfterAdmin() {
+    if (currentView === 'list') loadListView(currentPage);
+    if (selectedConstituency) loadConstituencyIssues(selectedConstituency.id);
+}
+
+async function adminDeleteComplaint(id) {
+    if (!confirm('Permanently delete this complaint?')) return;
+    try {
+        const res = await fetch(`${API}/api/admin/complaints/${id}?token=${adminToken}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        showToast('🗑️ Complaint deleted');
+        loadStats(); loadConstituencies();
+        refreshAfterAdmin();
+    } catch { showToast('Delete failed'); }
 }

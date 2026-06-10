@@ -5,7 +5,7 @@ import secrets
 import shutil
 from io import BytesIO
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Query
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -18,6 +18,7 @@ from PIL import Image
 from backend.models import SessionLocal, Issue, WatchSubscription, MCD_WARDS, CONSTITUENCY_WARDS
 from backend.models import DATABASE_URL
 from backend.models import MCD_ZONE_EMAILS, CONSTITUENCY_MCD_ZONE
+from backend.admin_auth import authenticate, validate_token, ADMIN_USERNAME, ADMIN_PASSWORD
 from backend.schemas import (
     IssueCreate, IssueResponse, IssueListResponse,
     ConstituencyInfo, IssueStats, SubscribeRequest, SubscribeResponse,
@@ -584,11 +585,11 @@ def subscription_count(db: Session = Depends(get_db)):
 @app.get("/api/digest", response_model=WeeklyDigest)
 
 @app.post("/api/telegram/webhook")
-async def telegram_webhook(request: dict, db=Depends(get_db)):
+async def telegram_webhook(request: Request, db=Depends(get_db)):
     """Telegram sends updates here. Captures chat_id on /start."""
     try:
-        # FastAPI auto-parses JSON body to dict
-        msg = request.get("message", {})
+        data = await request.json()
+        msg = data.get("message", {})
         chat = msg.get("chat", {})
         text = msg.get("text", "")
         chat_id = str(chat.get("id", ""))
@@ -752,6 +753,38 @@ def serve_upload(filename: str):
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404)
     return FileResponse(filepath)
+
+
+# ═══════════════════════════════════════════════
+# ADMIN
+# ═══════════════════════════════════════════════
+@app.post("/api/admin/login")
+def admin_login(data: dict):
+    username = data.get("username", "")
+    password = data.get("password", "")
+    token = authenticate(username, password)
+    if not token:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return {"token": token, "username": username}
+
+
+@app.get("/api/admin/check")
+def admin_check(token: str):
+    if not validate_token(token):
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return {"authenticated": True}
+
+
+@app.delete("/api/admin/complaints/{issue_id}")
+def admin_delete_complaint(issue_id: int, token: str, db: Session = Depends(get_db)):
+    if not validate_token(token):
+        raise HTTPException(status_code=401, detail="Admin access required")
+    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    if not issue:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+    db.delete(issue)
+    db.commit()
+    return {"deleted": issue_id}
 
 
 # Mount frontend LAST

@@ -20,6 +20,7 @@
                 </div>
             </div>
             <button id="report-fab" class="fab-btn">✏️ Report</button>
+            <button id="admin-btn" class="admin-btn" title="Admin">🔑</button>
         </div>
         <nav class="header-nav">
             <button class="nav-btn active" data-view="map">Map</button>
@@ -229,6 +230,27 @@
                 -->
                 <p class="modal-hint">Telegram is instant and free. Email coming soon.</p>
             </div>
+        </div>
+    </div>
+
+    <!-- ====== ADMIN LOGIN MODAL ====== -->
+    <div id="admin-modal" class="modal-overlay hidden">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2>🔑 Admin Login</h2>
+                <button id="admin-modal-close" class="icon-btn">&times;</button>
+            </div>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="admin-username" placeholder="admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="admin-password" required>
+                </div>
+                <button type="submit" class="btn primary full">Login</button>
+            </form>
         </div>
     </div>
 

@@ -46,6 +46,16 @@ header {
     transition: transform .15s;
 }
 .fab-btn:active { transform: scale(.95); }
+.admin-btn {
+    background: transparent; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.2);
+    padding: 8px 12px; border-radius: 50%; font-size: 0.9rem; cursor: pointer;
+    flex-shrink: 0; transition: all .15s;
+}
+.admin-btn:hover, .admin-btn.logged-in { color: #f9a825; border-color: #f9a825; }
+.admin-delete-btn {
+    background: none; border: 1px solid var(--red); color: var(--red);
+    font-size: .7rem; padding: 5px 10px; border-radius: 16px; cursor: pointer; font-weight: 500;
+}
 
 .header-nav {
     display: flex; gap: 0;
@@ -101,8 +111,10 @@ main { height: calc(100vh - 190px); position: relative; }
 #view-map { overflow: hidden; }
 #view-list, #view-leaderboard, #view-digest { background: var(--gray-50); }
 
-/* ====== MAP ====== */
+#map-container { height: 100%; width: 100%; position: relative; }
 #map { height: 100%; width: 100%; }
+/* Keep Leaflet circles under the sticky header (z-index:2000) */
+.leaflet-overlay-pane { z-index: 400 !important; }
 
 /* ====== INFO CARD ====== */
 .info-card {
