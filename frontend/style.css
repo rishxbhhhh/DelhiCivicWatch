@@ -351,9 +351,13 @@ main { height: calc(100vh - 190px); position: relative; }
 .toast.hidden { opacity: 0; transform: translateX(-50%) translateY(20px); pointer-events: none; }
 
 /* ====== RESPONSIVE ====== */
+@media (max-width: 480px) {
+    .fab-btn, .admin-btn { padding: 10px 14px; font-size: 0.82rem; }
+    .brand-text h1 { font-size: 1.1rem; }
+    .brand-tagline { font-size: 0.62rem; }
+}
 @media (min-width: 768px) {
     .info-card { left: auto; right: 16px; width: 380px; bottom: 16px; }
-    .modal { border-radius: 16px; margin: 40px auto; }
     .modal-overlay { align-items: center; }
     .header-top { padding: 16px 24px; }
     .brand-text h1 { font-size: 1.5rem; }
