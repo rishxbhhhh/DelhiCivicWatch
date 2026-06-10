@@ -287,6 +287,9 @@ main { height: calc(100vh - 190px); position: relative; }
     outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-light);
 }
 .form-group textarea { resize: vertical; min-height: 80px; }
+.char-counter { text-align: right; font-size: 0.72rem; color: var(--gray-600); margin-top: 2px; }
+.char-counter.limit-near { color: var(--orange); }
+.char-counter.limit-reached { color: var(--red); font-weight: 600; }
 
 .location-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .loc-status { font-size: .73rem; color: var(--green); font-weight: 500; }

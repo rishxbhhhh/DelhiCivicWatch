@@ -421,6 +421,10 @@ async def create_issue(
             detail="Storage full — reports temporarily paused. Admin is working on it. Please check back soon.",
         )
 
+    # Enforce 1000-char limit on issue summary
+    if len(issue_summary) > 1000:
+        raise HTTPException(status_code=400, detail="Issue summary cannot exceed 1000 characters")
+
     image_paths = []
     for img in images[:3]:
         if img.filename and img.filename.strip():

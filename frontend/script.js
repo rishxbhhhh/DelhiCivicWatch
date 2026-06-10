@@ -479,6 +479,20 @@ function openReportModal(preselected) {
         }
     };
 
+    // Char counter for description
+    const desc = document.getElementById('form-description');
+    const charCount = document.getElementById('char-count');
+    function updateCharCount() {
+        const len = desc.value.length;
+        charCount.textContent = len;
+        const counter = document.getElementById('char-count').parentElement;
+        counter.classList.remove('limit-near', 'limit-reached');
+        if (len >= 950) counter.classList.add('limit-reached');
+        else if (len >= 800) counter.classList.add('limit-near');
+    }
+    desc.addEventListener('input', updateCharCount);
+    updateCharCount();
+
     // Load wards if preselected
     if (preselected) {
         loadWardsForConstituency(preselected.id);
