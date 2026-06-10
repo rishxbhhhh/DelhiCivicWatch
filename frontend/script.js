@@ -204,7 +204,7 @@ async function loadListView(page = 0) {
                     ${renderImages(i)}
                     <div class="list-actions">
                         <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
-                        <button class="email-mcd-btn" data-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;').substring(0, 200)}">📧 Email MCD</button>
+                        <button class="email-mcd-btn" data-issue-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;').substring(0, 200)}">📧 Email MCD</button>
                         ${adminToken ? `<button class="admin-delete-btn" onclick="adminDeleteComplaint(${i.id})">✕</button>` : ''}
                         ${!i.resolved ? `<button class="resolve-btn" data-id="${i.id}">✅ Resolve</button>` : ''}
                     </div>
@@ -271,7 +271,7 @@ function issueItemHTML(i) {
             ${i.upvotes >= 3 ? '<span class="verified-tag">✓ Verified</span>' : ''}
             <span style="flex:1;min-width:0;">${escapeHtml(i.issue_summary).substring(0, 90)}${(i.issue_summary||'').length > 90 ? '...' : ''}</span>
             <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
-            <button class="email-mcd-btn" data-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}">📧</button>
+            <button class="email-mcd-btn" data-issue-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}">📧</button>
         </div>`;
 }
 
@@ -323,20 +323,38 @@ function bindEmailMCDButtons(container) {
             e.stopPropagation();
             const constId = btn.dataset.constituency;
             const summary = btn.dataset.summary || '';
+            const issueId = btn.dataset.issueId;
 
             try {
-                const res = await fetch(`${API}/api/mcd-email?constituency_id=${constId}`);
-                const data = await res.json();
+                const [mcdRes, issueRes] = await Promise.all([
+                    fetch(`${API}/api/mcd-email?constituency_id=${constId}`),
+                    issueId ? fetch(`${API}/api/issues?limit=1&constituency_id=${constId}`) : Promise.resolve(null),
+                ]);
+                const mcdData = await mcdRes.json();
 
-                const to = data.mcd_email || '';
-                const cc = data.mla_email || '';
+                const to = mcdData.mcd_email || '';
+                const cc = mcdData.mla_email || '';
                 const subject = encodeURIComponent(`Civic Complaint: ${summary.substring(0, 200)}`);
                 let body = `To the Municipal Corporation of Delhi,\n\n`;
                 body += `I wish to report the following civic issue:\n\n`;
                 body += `"${summary}"\n\n`;
-                body += `Location: ${data.mcd_zone || 'Delhi'} zone, Constituency: ${constId}\n`;
+                body += `Location: ${mcdData.mcd_zone || 'Delhi'} zone, Constituency: ${constId}\n`;
+
+                // Fetch images for this issue
+                if (issueRes && issueRes.ok) {
+                    const issueData = await issueRes.json();
+                    const issues = issueData.issues || [];
+                    if (issues.length > 0) {
+                        const imgs = typeof issues[0].images === 'string' ? JSON.parse(issues[0].images) : (issues[0].images || []);
+                        if (imgs.length > 0) {
+                            body += `\nPhotos:\n`;
+                            imgs.forEach(fn => { body += `${API}/uploads/${fn}\n`; });
+                        }
+                    }
+                }
+
                 body += `\n\n---\nSent via Delhi Civic Watch\n`;
-                if (cc) body += `\nMLA ${data.mla_name || ''} in CC`;
+                if (cc) body += `\nMLA ${mcdData.mla_name || ''} in CC`;
 
                 window.location.href = `mailto:${to}?cc=${cc}&subject=${subject}&body=${encodeURIComponent(body)}`;
             } catch {
