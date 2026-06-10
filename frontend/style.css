@@ -37,25 +37,26 @@ header {
 .brand-icon { font-size: 1.6rem; }
 .brand-text h1 { font-size: 1.3rem; font-weight: 700; line-height: 1.1; }
 .brand-text h1 .accent { color: #f9a825; }
-.fab-btn {
-    background: var(--red); color: white; border: none;
+.fab-btn, .admin-btn {
     padding: 10px 20px; border-radius: 24px;
     font-size: 0.9rem; font-weight: 600; cursor: pointer;
-    box-shadow: 0 2px 8px rgba(217,48,37,.4);
     white-space: nowrap;
     transition: transform .15s, box-shadow .15s;
+    font-family: inherit; border: none;
+}
+.fab-btn {
+    background: var(--red); color: white;
+    box-shadow: 0 2px 8px rgba(217,48,37,.4);
     margin-right: 8px;
+}
+.admin-btn {
+    background: rgba(255,255,255,0.1); color: white;
+    border: 1px solid rgba(255,255,255,0.4);
+    -webkit-appearance: none; appearance: none;
 }
 .fab-btn:active { transform: scale(.95); }
 .fab-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .fab-btn:disabled:active { transform: none; }
-.admin-btn {
-    background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.4);
-    padding: 10px 20px; border-radius: 24px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-    white-space: nowrap; transition: all .2s; font-family: inherit;
-    -webkit-appearance: none; -moz-appearance: none; appearance: none;
-    margin: 0; display: inline-block; text-align: center; text-decoration: none;
-}
 .admin-btn:hover, .admin-btn.logged-in { border-color: #f9a825; color: #f9a825; }
 .admin-delete-btn {
     background: none; border: 1px solid var(--red); color: var(--red);
