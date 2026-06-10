@@ -28,6 +28,8 @@ A crowd-sourced platform to report, track, and resolve civic issues across **Del
 | **Email MCD Button** | 📧 On every complaint — auto-populates MCD zone + MLA in CC |
 | **Storage Health Monitor** | Auto-pauses submissions at 90% disk with user-facing banner |
 | **Resolution Tracking** | Mark resolved with proof photo + response time tracking |
+| **Admin System** | 🔑 Env-secret login — admin can permanently delete complaints |
+| **One-Click Upvote** | LocalStorage dedup — same user can't upvote a complaint twice |
 | **12 Issue Categories** | Garbage, Sewage, Potholes, Street Lights, Water Logging, and more |
 | **Mobile Responsive** | Works on phone browsers, touch-friendly, camera-ready |
 | **Pagination & Filters** | Browse 20/page, filter by ward/category/status/sort |
@@ -77,6 +79,13 @@ fly deploy
 ```
 
 Your app → `https://delhi-civic-watch.fly.dev`
+
+**Set admin credentials:**
+```powershell
+fly secrets set ADMIN_USERNAME=... ADMIN_PASSWORD=***
+fly deploy
+```
+Then click 🔑 in the app header → login → ✕ delete buttons appear on every complaint.
 
 ---
 
@@ -129,6 +138,9 @@ fly deploy
 | POST | `/api/telegram/webhook` | Telegram bot webhook |
 | GET | `/api/digest` | Weekly activity summary |
 | POST | `/api/unsubscribe` | Unsubscribe by token |
+| POST | `/api/admin/login` | Admin login (username+password → token) |
+| DELETE | `/api/admin/complaints/{id}` | Permanently delete complaint (admin token required) |
+| GET | `/api/admin/check?token=` | Validate admin session |
 
 ---
 
