@@ -37,25 +37,34 @@ header {
 .brand-icon { font-size: 1.6rem; }
 .brand-text h1 { font-size: 1.3rem; font-weight: 700; line-height: 1.1; }
 .brand-text h1 .accent { color: #f9a825; }
-.brand-tagline { font-size: 0.68rem; color: rgba(255,255,255,0.6); margin-top: 1px; }
 .fab-btn {
     background: var(--red); color: white; border: none;
-    padding: 10px 18px; border-radius: 24px;
-    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    padding: 10px 20px; border-radius: 24px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
     box-shadow: 0 2px 8px rgba(217,48,37,.4);
-    white-space: nowrap; flex-shrink: 0;
-    transition: transform .15s;
+    white-space: nowrap;
+    transition: transform .15s, box-shadow .15s;
+    margin-right: 8px;
 }
 .fab-btn:active { transform: scale(.95); }
+.fab-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.fab-btn:disabled:active { transform: none; }
 .admin-btn {
-    background: transparent; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.2);
-    padding: 8px 12px; border-radius: 50%; font-size: 0.9rem; cursor: pointer;
-    flex-shrink: 0; transition: all .15s;
+    background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3);
+    padding: 8px 14px; border-radius: 24px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
+    white-space: nowrap; transition: all .2s; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 4px;
 }
-.admin-btn:hover, .admin-btn.logged-in { color: #f9a825; border-color: #f9a825; }
+.admin-btn:hover, .admin-btn.logged-in { border-color: #f9a825; color: #f9a825; }
 .admin-delete-btn {
     background: none; border: 1px solid var(--red); color: var(--red);
     font-size: .7rem; padding: 5px 10px; border-radius: 16px; cursor: pointer; font-weight: 500;
+}
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
 .header-nav {
