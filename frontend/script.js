@@ -204,7 +204,7 @@ async function loadListView(page = 0) {
                     ${renderImages(i)}
                     <div class="list-actions">
                         <button class="upvote-btn${alreadyUpvoted ? ' upvoted' : ''}" data-id="${i.id}">👍 ${i.upvotes || 0}</button>
-                        <button class="email-mcd-btn" data-issue-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;').substring(0, 200)}">📧 Email MCD</button>
+                        <button class="email-mcd-btn" data-issue-id="${i.id}" data-constituency="${i.constituency_id}" data-summary="${escapeHtml(i.issue_summary).replace(/"/g, '&quot;')}">📧 Email MCD</button>
                         ${adminToken ? `<button class="admin-delete-btn" onclick="adminDeleteComplaint(${i.id})">✕</button>` : ''}
                         ${!i.resolved ? `<button class="resolve-btn" data-id="${i.id}">✅ Resolve</button>` : ''}
                     </div>
@@ -334,7 +334,7 @@ function bindEmailMCDButtons(container) {
 
                 const to = mcdData.mcd_email || '';
                 const cc = mcdData.mla_email || '';
-                const subject = encodeURIComponent(`Civic Complaint: ${summary.substring(0, 200)}`);
+                const subject = encodeURIComponent(`Civic Complaint: ${summary.substring(0, 80)}`);
                 let body = `To the Municipal Corporation of Delhi,\n\n`;
                 body += `I wish to report the following civic issue:\n\n`;
                 body += `"${summary}"\n\n`;
